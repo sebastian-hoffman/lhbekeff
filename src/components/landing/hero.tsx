@@ -24,6 +24,11 @@ function formatEventTime(date: Date): string {
   return `${hour}:${minute} hs`;
 }
 
+function formatEventDate(date: Date): string {
+  const formatted = dateFormatter.format(date);
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
 export function Hero({ event }: { event: EventPublicSummary }) {
   return (
     <section className="relative overflow-hidden">
@@ -36,9 +41,9 @@ export function Hero({ event }: { event: EventPublicSummary }) {
 
         <div className="flex flex-col items-center gap-3">
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground capitalize">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground">
               <CalendarDays className="size-3.5" />
-              {dateFormatter.format(event.date)}
+              {formatEventDate(event.date)}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
               <Clock3 className="size-3.5" />

@@ -11,13 +11,13 @@ const FEATURES = [
   {
     icon: UtensilsCrossed,
     title: "Buffet a tu disposición",
-    description: "Durante el evento vas a poder comprar comidas y bebidas en el buffet.",
+    description: "Durante la noche vas a poder comprar comida y bebida en el buffet",
     accent: "bg-brand-gold/15 text-brand-gold",
   },
   {
     icon: HeartHandshake,
     title: "Apoyás a Bekeff",
-    description: "Tu compra apoya el proyecto Bekeff en Lamroth.",
+    description: "Tu compra y participación colabora con las becas del viaje a Israel por Bekeff",
     accent: "bg-brand-sky/15 text-brand-sky",
   },
 ];
