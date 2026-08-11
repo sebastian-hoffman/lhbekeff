@@ -1,0 +1,166 @@
+// Prisma schema — sistema de gestión de eventos Bekeff (Bingo 2026 y futuras ediciones)
+// Ver decisiones de diseño en /Users/sebahof/.claude/plans/elegant-chasing-snail.md
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Categoría de entrada. Cada una tiene su propia numeración (A-, M-, G-).
+enum TicketCategory {
+  ADULT
+  MINOR
+  FREE
+}
+
+/// Estado de una compra dentro del ciclo de verificación manual de pago.
+enum PurchaseStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+/// Un evento (ej. "Bingo Bekeff 2026"). Reutilizable año a año: para un nuevo
+/// evento se crea un nuevo registro con sus propios precios, fechas y link de
+/// pago, sin tocar código.
+model Event {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  date        DateTime
+  location    String?
+  description String?
+  isActive    Boolean  @default(true)
+
+  logoUrl         String?
+  mercadoPagoLink String
+
+  adultPriceCents Int
+  minorPriceCents Int
+  freePriceCents  Int @default(0)
+
+  /// Montos sugeridos para el aporte voluntario, en centavos.
+  voluntaryAmountsCents Int[] @default([500000, 1000000, 2000000])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchases Purchase[]
+  tickets   Ticket[]
+  sequences TicketSequence[]
+
+  @@map("events")
+}
+
+/// Una compra realizada por un comprador. Se crea recién al confirmar el
+/// resumen (antes de ir a Mercado Pago) para poder asociarle un código
+/// público y, luego, el comprobante subido.
+model Purchase {
+  id   String @id @default(cuid())
+  code String @unique
+
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+
+  buyerName  String
+  buyerEmail String
+  buyerPhone String
+
+  adultQty Int
+  minorQty Int
+  freeQty  Int
+
+  // Snapshot de precios al momento de la compra, para que cambios futuros de
+  // precio del evento no alteren el historial de compras ya realizadas.
+  adultUnitPriceCents Int
+  minorUnitPriceCents Int
+  freeUnitPriceCents  Int
+
+  adultSubtotalCents Int
+  minorSubtotalCents Int
+  freeSubtotalCents  Int
+
+  voluntaryContributionCents Int @default(0)
+  totalCents                 Int
+
+  status PurchaseStatus @default(PENDING)
+
+  receiptUrl      String?
+  receiptMimeType String?
+
+  confirmedAt DateTime?
+  confirmedBy String?
+
+  rejectedAt      DateTime?
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tickets Ticket[]
+
+  @@index([eventId, status])
+  @@index([buyerEmail])
+  @@map("purchases")
+}
+
+/// Una entrada individual. Se crea con nombre + categoría en el momento de la
+/// compra; `number` se completa recién al confirmar el pago (numeración
+/// atómica por evento+categoría). `checkedIn` se usa el día del evento.
+model Ticket {
+  id String @id @default(cuid())
+
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  purchaseId String
+
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+
+  category     TicketCategory
+  attendeeName String
+
+  /// Ej: "A-0001", "M-0032", "G-0004". Null hasta que se confirma la compra.
+  number String?
+
+  checkedIn   Boolean   @default(false)
+  checkedInAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, category, number])
+  @@index([purchaseId])
+  @@index([number])
+  @@map("tickets")
+}
+
+/// Contador atómico de numeración por evento+categoría. Nunca se reutiliza ni
+/// se resetea; se incrementa dentro de la misma transacción que confirma el
+/// pago para garantizar unicidad bajo concurrencia.
+model TicketSequence {
+  id String @id @default(cuid())
+
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+
+  category   TicketCategory
+  lastNumber Int            @default(0)
+
+  @@unique([eventId, category])
+  @@map("ticket_sequences")
+}
+
+/// Usuario del panel de administración. Login simple con email + contraseña.
+model AdminUser {
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+  name         String
+
+  createdAt DateTime @default(now())
+
+  @@map("admin_users")
+}
