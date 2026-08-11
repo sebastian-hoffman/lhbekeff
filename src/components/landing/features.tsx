@@ -17,7 +17,7 @@ const FEATURES = [
   {
     icon: HeartHandshake,
     title: "Apoyás a Bekeff",
-    description: "Tu compra apoya los proyectos y actividades de la comunidad Bekeff.",
+    description: "Tu compra apoya el proyecto Bekeff en Lamroth",
     accent: "bg-brand-sky/15 text-brand-sky",
   },
 ];
