@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, Clock3, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import type { EventPublicSummary } from "@/types";
@@ -10,6 +10,19 @@ const dateFormatter = new Intl.DateTimeFormat("es-AR", {
   month: "long",
   year: "numeric",
 });
+
+const timeFormatter = new Intl.DateTimeFormat("es-AR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  timeZone: "America/Argentina/Buenos_Aires",
+});
+
+function formatEventTime(date: Date): string {
+  const [hour, minute] = timeFormatter.format(date).split(":");
+  if (minute === "00") return `${hour} hs`;
+  return `${hour}:${minute} hs`;
+}
 
 export function Hero({ event }: { event: EventPublicSummary }) {
   return (
@@ -22,10 +35,16 @@ export function Hero({ event }: { event: EventPublicSummary }) {
         <Logo variant="full" priority className="w-full max-w-[260px] sm:max-w-xs" />
 
         <div className="flex flex-col items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground capitalize">
-            <CalendarDays className="size-3.5" />
-            {dateFormatter.format(event.date)}
-          </span>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground capitalize">
+              <CalendarDays className="size-3.5" />
+              {dateFormatter.format(event.date)}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
+              <Clock3 className="size-3.5" />
+              {formatEventTime(event.date)}
+            </span>
+          </div>
           {event.location ? (
             <span className="inline-flex max-w-sm items-center gap-1.5 text-sm text-muted-foreground">
               <MapPin className="size-3.5 shrink-0" />
