@@ -31,7 +31,7 @@ async function main() {
       date: new Date("2026-08-29T20:00:00-03:00"),
       location: "Lamroth Hakol, Caseros 1450, Florida, Pcia. de Buenos Aires",
       description:
-        "La entrada incluye toda la experiencia del Bingo y los cartones para jugar. Durante la noche vas a poder comprar comidas y bebidas en el buffet.",
+        "La entrada incluye toda la experiencia del Bingo y los cartones para jugar. Durante la noche vas a poder comprar comida y bebida en el buffet.",
       mercadoPagoLink: requireEnv("MERCADO_PAGO_LINK"),
       adultPriceCents: 2_000_000, // $20.000
       minorPriceCents: 1_000_000, // $10.000
