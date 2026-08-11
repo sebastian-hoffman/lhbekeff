@@ -45,9 +45,12 @@ export async function confirmPurchase(input: ConfirmPurchaseInput): Promise<Admi
         include: { tickets: true },
       });
 
-      if (purchase.status === PurchaseStatus.CONFIRMED) return;
-
+      // Solo se numeran las entradas que todavía no tienen número. Esto hace
+      // que confirmar sea idempotente incluso si la compra pasó antes por
+      // CONFIRMED -> REJECTED -> CONFIRMED: no se vuelve a numerar (lo que
+      // desperdiciaría números) ni se pisa el número ya asignado.
       for (const ticket of purchase.tickets) {
+        if (ticket.number) continue;
         const sequence = await tx.ticketSequence.update({
           where: { eventId_category: { eventId: purchase.eventId, category: ticket.category } },
           data: { lastNumber: { increment: 1 } },
