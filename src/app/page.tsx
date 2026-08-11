@@ -4,6 +4,8 @@ import { Hero } from "@/components/landing/hero";
 import { PricingPreview } from "@/components/landing/pricing-preview";
 import { getActiveEvent } from "@/server/services/event.service";
 
+export const dynamic = "force-dynamic";
+
 export default async function LandingPage() {
   const event = await getActiveEvent();
 

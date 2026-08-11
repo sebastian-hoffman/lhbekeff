@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { EntradasForm } from "@/components/wizard/entradas-form";
 import { getActiveEvent } from "@/server/services/event.service";
+export const dynamic = "force-dynamic";
 
 export default async function EntradasPage() {
   const event = await getActiveEvent();
