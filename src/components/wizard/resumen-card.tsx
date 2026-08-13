@@ -123,9 +123,21 @@ export function ResumenCard({ event }: { event: EventPublicSummary }) {
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      <Button size="lg" className="mt-auto h-12 text-base" onClick={handleConfirm} disabled={isPending}>
-        {isPending ? "Confirmando…" : "Confirmar y continuar al pago"}
-      </Button>
+      <div className="mt-auto grid gap-3 sm:grid-cols-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="h-12 text-base"
+          onClick={() => router.push("/reservar/aporte")}
+          disabled={isPending}
+        >
+          Volver
+        </Button>
+        <Button type="button" size="lg" className="h-12 text-base" onClick={handleConfirm} disabled={isPending}>
+          {isPending ? "Confirmando…" : "Confirmar y continuar al pago"}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -62,13 +62,13 @@ export function PagoPanel({
             </div>
           ) : null}
 
-          <Button asChild size="lg" className="mt-4 h-12 w-full text-base">
-            <Link href={mercadoPagoPaymentOption.url} target="_blank" rel="noreferrer">
-              {mercadoPagoPaymentOption.kind === "link"
-                ? "Abrir link de pago"
-                : "Probar Mercado Pago"}
-            </Link>
-          </Button>
+          {mercadoPagoPaymentOption.kind === "checkout" ? (
+            <Button asChild size="lg" className="mt-4 h-12 w-full text-base">
+              <Link href={mercadoPagoPaymentOption.url} target="_blank" rel="noreferrer">
+                Probar Mercado Pago
+              </Link>
+            </Button>
+          ) : null}
         </div>
       ) : null}
     </div>

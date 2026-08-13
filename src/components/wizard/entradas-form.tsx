@@ -85,9 +85,20 @@ export function EntradasForm({ event }: { event: EventPublicSummary }) {
         </div>
       ) : null}
 
-      <Button size="lg" className="mt-auto h-12 text-base" onClick={handleContinue}>
-        Continuar
-      </Button>
+      <div className="mt-auto grid gap-3 sm:grid-cols-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="h-12 text-base"
+          onClick={() => router.push("/reservar")}
+        >
+          Volver
+        </Button>
+        <Button type="button" size="lg" className="h-12 text-base" onClick={handleContinue}>
+          Continuar
+        </Button>
+      </div>
     </div>
   );
 }

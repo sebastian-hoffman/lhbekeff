@@ -13,7 +13,7 @@ type TransferPaymentDetailsProps = {
   showOnlyTransferNotice?: boolean;
 };
 
-type CopyKey = "alias" | "cbu" | "cuit" | "account";
+type CopyKey = "cbu";
 
 export function TransferPaymentDetails({
   totalCents,
@@ -56,49 +56,34 @@ export function TransferPaymentDetails({
         </p>
       </div>
 
-      <div className="space-y-2 text-sm">
-        <Field label="Titular" value={TRANSFER_ACCOUNT.holder} />
-        <Field label="Banco" value={TRANSFER_ACCOUNT.bank} />
-        <Field
-          label={TRANSFER_ACCOUNT.accountLabel}
-          value={TRANSFER_ACCOUNT.accountNumber}
-          copyAction={{
-            key: "account",
-            copiedKey,
-            onCopy: copyValue,
-            rawValue: TRANSFER_ACCOUNT.accountNumber,
-          }}
-        />
-        <Field
-          label="CBU"
-          value={TRANSFER_ACCOUNT.cbuDisplay}
-          copyAction={{
-            key: "cbu",
-            copiedKey,
-            onCopy: copyValue,
-            rawValue: TRANSFER_ACCOUNT.cbu,
-          }}
-        />
-        <Field
-          label="Alias"
-          value={TRANSFER_ACCOUNT.alias}
-          copyAction={{
-            key: "alias",
-            copiedKey,
-            onCopy: copyValue,
-            rawValue: TRANSFER_ACCOUNT.alias,
-          }}
-        />
-        <Field
-          label="CUIT"
-          value={TRANSFER_ACCOUNT.cuit}
-          copyAction={{
-            key: "cuit",
-            copiedKey,
-            onCopy: copyValue,
-            rawValue: TRANSFER_ACCOUNT.cuit,
-          }}
-        />
+      <div className="rounded-xl border border-border bg-background p-4 text-sm">
+        <div className="space-y-3">
+          <DataRow label="Titular" value={TRANSFER_ACCOUNT.holder} />
+          <DataRow label="Banco" value={TRANSFER_ACCOUNT.bank} />
+          <DataRow label={TRANSFER_ACCOUNT.accountLabel} value={TRANSFER_ACCOUNT.accountNumber} />
+          <div className="flex items-center justify-between gap-3">
+            <DataRow label="CBU" value={TRANSFER_ACCOUNT.cbuDisplay} />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 shrink-0"
+              onClick={() => copyValue("cbu", TRANSFER_ACCOUNT.cbu)}
+            >
+              {copiedKey === "cbu" ? (
+                <>
+                  <Check className="size-3.5" /> Copiado
+                </>
+              ) : (
+                <>
+                  <Copy className="size-3.5" /> Copiar
+                </>
+              )}
+            </Button>
+          </div>
+          <DataRow label="Alias" value={TRANSFER_ACCOUNT.alias} />
+          <DataRow label="CUIT" value={TRANSFER_ACCOUNT.cuit} />
+        </div>
       </div>
 
       <div className="rounded-xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
@@ -117,44 +102,13 @@ export function TransferPaymentDetails({
   );
 }
 
-type FieldProps = {
-  label: string;
-  value: string;
-  copyAction?: {
-    key: CopyKey;
-    copiedKey: CopyKey | null;
-    onCopy: (key: CopyKey, value: string) => Promise<void>;
-    rawValue: string;
-  };
-};
-
-function Field({ label, value, copyAction }: FieldProps) {
+function DataRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2">
+    <div>
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="font-medium">{value}</p>
       </div>
-
-      {copyAction ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8"
-          onClick={() => copyAction.onCopy(copyAction.key, copyAction.rawValue)}
-        >
-          {copyAction.copiedKey === copyAction.key ? (
-            <>
-              <Check className="size-3.5" /> Copiado
-            </>
-          ) : (
-            <>
-              <Copy className="size-3.5" /> Copiar
-            </>
-          )}
-        </Button>
-      ) : null}
     </div>
   );
 }
