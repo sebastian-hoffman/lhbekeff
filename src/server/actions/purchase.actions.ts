@@ -87,20 +87,57 @@ export async function uploadReceipt(
   code: string,
   formData: FormData,
 ): Promise<UploadReceiptResult> {
+  const normalizedCode = code.trim().toUpperCase();
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { success: false, error: "Seleccioná un archivo." };
   }
 
-  const purchase = await prisma.purchase.findUnique({ where: { code } });
+  const purchase = await prisma.purchase.findUnique({ where: { code: normalizedCode } });
   if (!purchase) {
     return { success: false, error: "No encontramos esa compra." };
   }
 
+  return attachReceiptToPurchase(purchase.id, purchase.code, file);
+}
+
+export async function uploadReceiptByCodeAndEmail(
+  code: string,
+  email: string,
+  formData: FormData,
+): Promise<UploadReceiptResult> {
+  const normalizedCode = code.trim().toUpperCase();
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedCode || !normalizedEmail) {
+    return { success: false, error: "Completá código de compra y email." };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { success: false, error: "Seleccioná un archivo." };
+  }
+
+  const purchase = await prisma.purchase.findUnique({ where: { code: normalizedCode } });
+  if (!purchase) {
+    return { success: false, error: "No encontramos una compra con ese código." };
+  }
+
+  if (purchase.buyerEmail.trim().toLowerCase() !== normalizedEmail) {
+    return { success: false, error: "El email no coincide con la compra." };
+  }
+
+  return attachReceiptToPurchase(purchase.id, purchase.code, file);
+}
+
+async function attachReceiptToPurchase(
+  purchaseId: string,
+  purchaseCode: string,
+  file: File,
+): Promise<UploadReceiptResult> {
   try {
-    const saved = await saveReceipt(file, purchase.code);
+    const saved = await saveReceipt(file, purchaseCode);
     await prisma.purchase.update({
-      where: { id: purchase.id },
+      where: { id: purchaseId },
       data: { receiptUrl: saved.relativePath, receiptMimeType: saved.mimeType },
     });
     return { success: true };

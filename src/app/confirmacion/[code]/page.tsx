@@ -4,6 +4,7 @@ import { CalendarDays, CheckCircle2, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { Money } from "@/components/shared/money";
+import { TransferPaymentDetails } from "@/components/wizard/transfer-payment-details";
 import { WizardResetOnMount } from "@/components/wizard/wizard-reset-on-mount";
 import { getPurchaseByCode } from "@/server/services/purchase.service";
 
@@ -48,7 +49,7 @@ export default async function ConfirmacionPage({
       <CheckCircle2 className="mt-6 size-12 text-primary" />
       <h1 className="mt-4 text-2xl font-semibold tracking-tight">¡Gracias por tu compra!</h1>
       <p className="mt-2 max-w-sm text-muted-foreground">
-        Tu compra quedó registrada. En breve verificaremos el pago.
+        Comprobante recibido. Validaremos tu pago y te avisaremos por este medio.
       </p>
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -73,6 +74,10 @@ export default async function ConfirmacionPage({
             <Money cents={purchase.totalCents} />
           </p>
         </div>
+      </div>
+
+      <div className="mt-6 w-full max-w-xl text-left">
+        <TransferPaymentDetails code={purchase.code} totalCents={purchase.totalCents} />
       </div>
 
       <Button asChild variant="outline" className="mt-8">

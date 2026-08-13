@@ -12,10 +12,6 @@ export default async function PagoPage({
   if (!purchase) notFound();
 
   return (
-    <PagoPanel
-      code={purchase.code}
-      totalCents={purchase.totalCents}
-      mercadoPagoLink={purchase.event.mercadoPagoLink}
-    />
+    <PagoPanel code={purchase.code} totalCents={purchase.totalCents} />
   );
 }

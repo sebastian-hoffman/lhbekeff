@@ -68,9 +68,14 @@ export function Hero({ event }: { event: EventPublicSummary }) {
           ) : null}
         </div>
 
-        <Button asChild size="lg" className="h-12 px-8 text-base">
-          <Link href="/reservar">Reservar entradas</Link>
-        </Button>
+        <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
+          <Button asChild size="lg" className="h-12 px-8 text-base sm:flex-1">
+            <Link href="/reservar">Reservar entradas</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="h-12 px-8 text-base sm:flex-1">
+            <Link href="/comprobante">Ya transferí, cargar comprobante</Link>
+          </Button>
+        </div>
 
         <p className="text-sm text-muted-foreground">
           Reservá en menos de 2 minutos · Toda la experiencia del Bingo incluida

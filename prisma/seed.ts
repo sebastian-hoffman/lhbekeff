@@ -28,7 +28,7 @@ async function main() {
     create: {
       slug: "bingo-bekeff-2026",
       name: "Bingo Bekeff 2026",
-      date: new Date("2026-08-29T20:00:00-03:00"),
+      date: new Date("2026-08-29T20:30:00-03:00"),
       location: "Lamroth Hakol, Caseros 1450, Florida, Pcia. de Buenos Aires",
       description:
         "La entrada incluye toda la experiencia del Bingo y los cartones para jugar. Durante la noche vas a poder comprar comida y bebida en el buffet.",

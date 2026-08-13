@@ -1,15 +1,13 @@
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Money } from "@/components/shared/money";
+import { TransferPaymentDetails } from "@/components/wizard/transfer-payment-details";
 
 type PagoPanelProps = {
   code: string;
   totalCents: number;
-  mercadoPagoLink: string;
 };
 
-export function PagoPanel({ code, totalCents, mercadoPagoLink }: PagoPanelProps) {
+export function PagoPanel({ code, totalCents }: PagoPanelProps) {
   return (
     <div className="flex flex-1 flex-col gap-8">
       <div className="space-y-1.5">
@@ -21,23 +19,17 @@ export function PagoPanel({ code, totalCents, mercadoPagoLink }: PagoPanelProps)
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-6 text-center">
-        <p className="text-sm text-muted-foreground">Total a pagar</p>
-        <p className="mt-1 text-3xl font-semibold">
-          <Money cents={totalCents} />
-        </p>
+      <TransferPaymentDetails code={code} totalCents={totalCents} />
+
+      <div className="mt-auto grid gap-3 sm:grid-cols-2">
+        <Button asChild size="lg" className="h-12 text-base">
+          <Link href={`/reservar/comprobante/${code}`}>Ya transferí, subir comprobante ahora</Link>
+        </Button>
+
+        <Button asChild variant="outline" size="lg" className="h-12 text-base">
+          <Link href="/comprobante">Ya transferí, cargar comprobante después</Link>
+        </Button>
       </div>
-
-      <Button asChild size="lg" className="h-12 text-base">
-        <a href={mercadoPagoLink} target="_blank" rel="noopener noreferrer">
-          Pagar con Mercado Pago
-          <ExternalLink className="size-4" />
-        </a>
-      </Button>
-
-      <Button asChild variant="outline" size="lg" className="mt-auto h-12 text-base">
-        <Link href={`/reservar/comprobante/${code}`}>Ya pagué, continuar</Link>
-      </Button>
     </div>
   );
 }
