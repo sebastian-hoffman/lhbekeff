@@ -37,6 +37,9 @@ Completá `.env`:
 - `AUTH_SECRET`: generar con `openssl rand -hex 32`.
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME`: credenciales del admin que crea el seed.
 - `MERCADO_PAGO_LINK`: link de pago del evento (se puede editar después desde la base).
+- `MERCADO_PAGO_ACCESS_TOKEN`: token privado para crear checkouts de Mercado Pago.
+- `NEXT_PUBLIC_PAYMENT_PROVIDER`: `transfer`, `mercadopago` o `both`.
+- `NEXT_PUBLIC_APP_URL`: URL pública del sitio, necesaria para volver desde el checkout.
 - `UPLOADS_DIR`: carpeta local donde se guardan los comprobantes (por defecto `./uploads`).
 
 Luego:
@@ -98,8 +101,9 @@ src/middleware.ts             Protege /admin/* verificando la cookie de sesión
    completar en el panel admin.
 2. **Resumen**: al confirmar, recién ahí se crea la `Purchase` (estado
    `PENDING`) con un código público (`BK26-XXXXXX`).
-3. **Pago**: botón externo a Mercado Pago (link configurado en el `Event`) +
-   botón "Ya pagué, continuar".
+3. **Pago**: por defecto muestra transferencia bancaria. Si activás Mercado
+   Pago con `NEXT_PUBLIC_PAYMENT_PROVIDER`, aparece un botón de prueba que
+   crea y reutiliza un checkout por compra.
 4. **Comprobante**: sube el archivo, que se guarda en `UPLOADS_DIR` y se
    asocia a la compra.
 5. **Confirmación**: página de agradecimiento con el código y el total.
@@ -118,6 +122,17 @@ src/middleware.ts             Protege /admin/* verificando la cookie de sesión
 No se envían emails en ningún paso del flujo (confirmación, rechazo,
 ingreso): todo se refleja solo en el panel.
 
+## Cómo probar Mercado Pago
+
+1. Cargá un token de prueba o sandbox en `MERCADO_PAGO_ACCESS_TOKEN`.
+2. Cambiá `NEXT_PUBLIC_PAYMENT_PROVIDER` a `mercadopago` o `both`.
+3. Verificá que `NEXT_PUBLIC_APP_URL` apunte a tu dominio local o de Railway.
+4. Abrí una compra pendiente en `/reservar/pago/[code]`.
+5. Confirmá que aparezca el botón `Probar Mercado Pago`.
+6. Abrí el checkout de prueba y completá el pago con una cuenta sandbox.
+7. Revisá que la compra conserve `mercadoPagoPreferenceId` y
+   `mercadoPagoCheckoutUrl` para no regenerar el link.
+
 ## Despliegue en Railway
 
 1. **Crear el servicio Postgres**: "New" → "Database" → "PostgreSQL" dentro
@@ -128,6 +143,8 @@ ingreso): todo se refleja solo en el panel.
 3. **Variables de entorno** del servicio de la app (Settings → Variables):
    - `DATABASE_URL` → referenciar la del plugin: `${{Postgres.DATABASE_URL}}`
    - `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`, `MERCADO_PAGO_LINK`
+   - `MERCADO_PAGO_ACCESS_TOKEN` y `NEXT_PUBLIC_PAYMENT_PROVIDER` cuando
+     quieras habilitar o probar Mercado Pago
    - `NEXT_PUBLIC_APP_URL` → la URL pública que asigna Railway
    - `UPLOADS_DIR` → `/data/uploads` (ver paso siguiente)
 4. **Volume persistente para comprobantes**: en el servicio de la app,
@@ -145,6 +162,7 @@ Todo lo específico del Bingo 2026 vive en la tabla `Event`, no en el código:
 - nombre, fecha y descripción del evento
 - precios por categoría (adulto/menor/niño) y montos sugeridos de aporte voluntario
 - link de Mercado Pago
+- checkout de Mercado Pago generado por compra, si está habilitado
 - logo (`logoUrl`)
 
 Para un nuevo evento: crear un nuevo registro `Event` con `isActive: true` y

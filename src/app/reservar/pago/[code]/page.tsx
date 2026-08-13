@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { PagoPanel } from "@/components/wizard/pago-panel";
+import { getOrCreateMercadoPagoCheckoutUrl } from "@/lib/mercado-pago";
 import { getPurchaseByCode } from "@/server/services/purchase.service";
 
 export default async function PagoPage({
@@ -11,7 +12,13 @@ export default async function PagoPage({
   const purchase = await getPurchaseByCode(code);
   if (!purchase) notFound();
 
+  const mercadoPagoCheckoutUrl = await getOrCreateMercadoPagoCheckoutUrl(purchase);
+
   return (
-    <PagoPanel code={purchase.code} totalCents={purchase.totalCents} />
+    <PagoPanel
+      code={purchase.code}
+      totalCents={purchase.totalCents}
+      mercadoPagoCheckoutUrl={mercadoPagoCheckoutUrl}
+    />
   );
 }

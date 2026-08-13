@@ -87,6 +87,9 @@ model Purchase {
   voluntaryContributionCents Int @default(0)
   totalCents                 Int
 
+  mercadoPagoPreferenceId  String?
+  mercadoPagoCheckoutUrl   String?
+
   status PurchaseStatus @default(PENDING)
 
   receiptUrl      String?
