@@ -4,7 +4,6 @@ import { CalendarDays, CheckCircle2, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { Money } from "@/components/shared/money";
-import { TransferPaymentDetails } from "@/components/wizard/transfer-payment-details";
 import { WizardResetOnMount } from "@/components/wizard/wizard-reset-on-mount";
 import { getPurchaseByCode } from "@/server/services/purchase.service";
 
@@ -74,10 +73,6 @@ export default async function ConfirmacionPage({
             <Money cents={purchase.totalCents} />
           </p>
         </div>
-      </div>
-
-      <div className="mt-6 w-full max-w-xl text-left">
-        <TransferPaymentDetails code={purchase.code} totalCents={purchase.totalCents} />
       </div>
 
       <Button asChild variant="outline" className="mt-8">
