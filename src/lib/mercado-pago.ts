@@ -5,6 +5,11 @@ import type { PurchaseWithTickets } from "@/server/services/purchase.service";
 
 const MERCADO_PAGO_API = "https://api.mercadopago.com/checkout/preferences";
 
+export type MercadoPagoPaymentOption = {
+  url: string;
+  kind: "checkout" | "link";
+};
+
 export function isMercadoPagoEnabled() {
   const mode = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER?.trim().toLowerCase();
   return mode === "mercadopago" || mode === "both";
@@ -14,8 +19,26 @@ export function hasMercadoPagoAccessToken() {
   return Boolean(process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim());
 }
 
-export async function getOrCreateMercadoPagoCheckoutUrl(purchase: PurchaseWithTickets) {
-  if (!isMercadoPagoEnabled() || !hasMercadoPagoAccessToken()) {
+export async function getMercadoPagoPaymentOption(
+  purchase: PurchaseWithTickets,
+): Promise<MercadoPagoPaymentOption | null> {
+  if (isMercadoPagoEnabled() && hasMercadoPagoAccessToken()) {
+    const checkoutUrl = await getOrCreateMercadoPagoCheckoutUrl(purchase);
+    if (checkoutUrl) {
+      return { url: checkoutUrl, kind: "checkout" };
+    }
+  }
+
+  const eventPaymentLink = normalizeHttpUrl(purchase.event.mercadoPagoLink);
+  if (eventPaymentLink) {
+    return { url: eventPaymentLink, kind: "link" };
+  }
+
+  return null;
+}
+
+async function getOrCreateMercadoPagoCheckoutUrl(purchase: PurchaseWithTickets) {
+  if (!hasMercadoPagoAccessToken()) {
     return null;
   }
 
@@ -89,4 +112,16 @@ export async function getOrCreateMercadoPagoCheckoutUrl(purchase: PurchaseWithTi
   });
 
   return checkoutUrl;
+}
+
+function normalizeHttpUrl(rawUrl: string | null | undefined): string | null {
+  if (!rawUrl) return null;
+
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
 }
