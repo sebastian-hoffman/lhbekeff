@@ -124,7 +124,14 @@ export function PurchaseDetailView({ purchase }: { purchase: PurchaseDetail }) {
         </Section>
       </div>
 
-      <Section title="Entradas">
+      {purchase.items.length > 0 ? <Section title="Productos · Entrega en sedes de Lamroth">
+        <div className="divide-y divide-border">
+          {purchase.items.map((item) => <div key={item.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+            <div><p className="font-medium">{item.name}</p><p className="text-xs text-muted-foreground">{item.size ? `Talle ${item.size} · ` : ""}{item.quantity} × <Money cents={item.unitPriceCents} /></p></div>
+            <Money cents={item.subtotalCents} />
+          </div>)}
+        </div>
+      </Section> : <Section title="Entradas">
         <div className="divide-y divide-border">
           {purchase.tickets.map((ticket) => (
             <div key={ticket.id} className="flex items-center justify-between py-2.5 text-sm">
@@ -138,7 +145,7 @@ export function PurchaseDetailView({ purchase }: { purchase: PurchaseDetail }) {
             </div>
           ))}
         </div>
-      </Section>
+      </Section>}
 
       <Section title="Total">
         <div className="space-y-1.5 text-sm">
@@ -173,7 +180,7 @@ export function PurchaseDetailView({ purchase }: { purchase: PurchaseDetail }) {
         <div>
           <h2 className="text-sm font-medium text-destructive">Eliminar compra</h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Borra la compra y sus entradas de forma permanente. No se puede deshacer.
+            Borra la compra y sus productos o entradas de forma permanente. No se puede deshacer.
           </p>
         </div>
         <Button
@@ -217,7 +224,7 @@ export function PurchaseDetailView({ purchase }: { purchase: PurchaseDetail }) {
             <DialogTitle>¿Eliminar esta compra?</DialogTitle>
             <DialogDescription>
               Se va a borrar la compra {purchase.code} de {purchase.buyerName} y sus{" "}
-              {purchase.tickets.length} entradas de forma permanente. Esta acción no se puede
+              {purchase.items.length > 0 ? "productos" : `${purchase.tickets.length} entradas`} de forma permanente. Esta acción no se puede
               deshacer.
             </DialogDescription>
           </DialogHeader>

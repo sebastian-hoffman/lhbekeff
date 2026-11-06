@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Lamroth: desarrollo",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev",
+				"--",
+				"--port",
+				"3001"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Lamroth: vista previa",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"next",
+				"start",
+				"--port",
+				"3001"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

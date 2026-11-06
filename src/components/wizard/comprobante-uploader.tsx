@@ -69,7 +69,7 @@ export function ComprobanteUploader({ code }: { code: string }) {
 
       <Button type="submit" size="lg" className="mt-auto h-12 text-base" disabled={isPending}>
         {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-        {isPending ? "Subiendo…" : "Confirmar compra"}
+        {isPending ? "Subiendo…" : "Enviar comprobante"}
       </Button>
     </form>
   );

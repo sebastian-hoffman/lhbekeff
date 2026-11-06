@@ -1,4 +1,46 @@
-# Bingo Bekeff 2026
+# Lamroth · Preventa Majané 2026
+
+La portada es una tienda de preventa de productos Lamroth, independiente del
+evento activo. El sistema anterior de entradas se conserva para el historial.
+
+## Tienda de preventa
+
+- Remera de Shabat: $15.000. Talles 6, 8, 10, 12, 14, 16, S, M, L y XL.
+- Botellita: $10.000. Aluminio, 600 ml, 23 cm de alto, 6 cm de diámetro,
+  colgante de silicona negra. Sin elección de color.
+- Toallón azul: $18.000.
+- Cierre: 7 de noviembre de 2026 inclusive, hora de Argentina.
+- Entrega en sedes de Lamroth. Fecha y coordinación del retiro a confirmar.
+
+El catálogo y el cierre se configuran en `src/lib/shop.ts`. Los precios se
+recalculan en el servidor y quedan guardados en `PurchaseItem`. Los pedidos
+no crean entradas. El carrito se conserva en el navegador y permite varias
+remeras de distintos talles. El pago y el estado viven en `/pedido/[code]`.
+El panel incluye productos por talle, separados entre pendientes y pagados.
+
+Aplicar las migraciones antes de ejecutar la nueva versión:
+
+```bash
+npx prisma migrate deploy
+npx prisma generate
+node --experimental-strip-types --test tests/shop.test.mjs
+```
+
+Para Mercado Pago, configurar `MERCADO_PAGO_ACCESS_TOKEN` y
+`NEXT_PUBLIC_APP_URL` (URL pública HTTPS para checkout real). En la tienda
+se habilita automáticamente cuando hay token; si no está disponible se
+ofrece transferencia. Opcionalmente `LAMROTH_MERCADO_PAGO_LINK` permite un
+enlace de pago manual, guardado al crear por primera vez la campaña.
+Los datos bancarios existentes están en `src/lib/transfer.ts`: verificar
+que correspondan a esta campaña antes de publicar.
+
+Los pagos requieren revisión manual en el panel. Volver desde Mercado Pago
+no confirma el pago. No hay webhook ni envío automático de emails.
+
+Pendiente de información comercial: tabla de medidas, fecha de entrega,
+coordinación por sede y política de cambios. No se inventaron estos datos.
+
+## Sistema anterior de entradas
 
 Sistema de venta y gestión de entradas para el Bingo Bekeff. Incluye una
 interfaz pública de compra (mobile-first) y un panel de administración

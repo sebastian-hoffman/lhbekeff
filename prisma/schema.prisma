@@ -105,10 +105,26 @@ model Purchase {
   updatedAt DateTime @updatedAt
 
   tickets Ticket[]
+  items   PurchaseItem[]
 
   @@index([eventId, status])
   @@index([buyerEmail])
   @@map("purchases")
+}
+
+model PurchaseItem {
+  id             String   @id @default(cuid())
+  purchaseId     String
+  purchase       Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  productId      String
+  name           String
+  size           String?
+  quantity       Int
+  unitPriceCents Int
+  subtotalCents  Int
+
+  @@index([purchaseId])
+  @@map("purchase_items")
 }
 
 /// Una entrada individual. Se crea con nombre + categoría en el momento de la

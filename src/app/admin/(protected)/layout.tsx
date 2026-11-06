@@ -24,7 +24,7 @@ export default async function AdminProtectedLayout({
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:px-6">
           <Link href="/admin" className="flex shrink-0 items-center gap-2">
             <Logo variant="mark" className="size-8" />
-            <span className="hidden text-sm font-medium sm:inline">Bekeff 2026 · Admin</span>
+            <span className="hidden text-sm font-medium sm:inline">Lamroth · Admin</span>
           </Link>
 
           <nav className="flex items-center gap-1">

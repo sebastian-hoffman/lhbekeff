@@ -68,3 +68,19 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     ticketsSoldByCategory,
   };
 }
+
+export async function getProductOrderSummary() {
+  const rows = await prisma.purchaseItem.findMany({
+    where: { purchase: { status: { in: [PurchaseStatus.PENDING, PurchaseStatus.CONFIRMED] } } },
+    select: { productId: true, name: true, size: true, quantity: true, purchase: { select: { status: true } } },
+  });
+  const summary = new Map<string, { productId: string; name: string; size: string | null; pending: number; confirmed: number }>();
+  for (const row of rows) {
+    const key = `${row.productId}-${row.size ?? ""}`;
+    const total = summary.get(key) ?? { productId: row.productId, name: row.name, size: row.size, pending: 0, confirmed: 0 };
+    if (row.purchase.status === PurchaseStatus.CONFIRMED) total.confirmed += row.quantity;
+    else total.pending += row.quantity;
+    summary.set(key, total);
+  }
+  return [...summary.values()].sort((first, second) => first.productId.localeCompare(second.productId) || (first.size ?? "").localeCompare(second.size ?? "", "es", { numeric: true }));
+}

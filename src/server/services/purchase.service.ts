@@ -24,7 +24,7 @@ export type PurchaseListItem = Awaited<ReturnType<typeof listPurchases>>[number]
 export function getPurchaseById(id: string) {
   return prisma.purchase.findUnique({
     where: { id },
-    include: { tickets: { orderBy: { createdAt: "asc" } }, event: true },
+    include: { tickets: { orderBy: { createdAt: "asc" } }, items: true, event: true },
   });
 }
 
@@ -33,7 +33,7 @@ export type PurchaseDetail = NonNullable<Awaited<ReturnType<typeof getPurchaseBy
 export function getPurchaseByCode(code: string) {
   return prisma.purchase.findUnique({
     where: { code },
-    include: { tickets: { orderBy: { createdAt: "asc" } }, event: true },
+    include: { tickets: { orderBy: { createdAt: "asc" } }, items: true, event: true },
   });
 }
 

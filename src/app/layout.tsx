@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Barlow_Condensed, DM_Sans, Geist, Geist_Mono } from "next/font/google";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -14,12 +14,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const shopBody = DM_Sans({ variable: "--font-shop-body", subsets: ["latin"] });
+const shopDisplay = Barlow_Condensed({ variable: "--font-shop-display", subsets: ["latin"], weight: ["500", "600", "700"] });
+
 export const metadata: Metadata = {
-  title: "Bingo Bekeff 2026",
+  title: "Lamroth · Preventa Majané 2026",
   description:
-    "Reservá tus entradas para el Bingo Bekeff 2026: toda la experiencia del Bingo con los cartones incluidos, buffet a la venta y una noche junto a la comunidad.",
+    "No te podés quedar sin la remera de Shabat. Remeras, botellitas y toallones Lamroth a precio especial de preventa hasta el 13 de noviembre. Entrega en sedes de Lamroth.",
   icons: {
-    icon: "/icon-mark.png",
+    icon: "/productos/lamroth-mark.png",
   },
 };
 
@@ -29,7 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${shopBody.variable} ${shopDisplay.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <QueryProvider>

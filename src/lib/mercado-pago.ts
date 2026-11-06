@@ -22,7 +22,7 @@ export function hasMercadoPagoAccessToken() {
 export async function getMercadoPagoPaymentOption(
   purchase: PurchaseWithTickets,
 ): Promise<MercadoPagoPaymentOption | null> {
-  if (isMercadoPagoEnabled() && hasMercadoPagoAccessToken()) {
+  if ((isMercadoPagoEnabled() || purchase.items.length > 0) && hasMercadoPagoAccessToken()) {
     const checkoutUrl = await getOrCreateMercadoPagoCheckoutUrl(purchase);
     if (checkoutUrl) {
       return { url: checkoutUrl, kind: "checkout" };
@@ -71,7 +71,7 @@ async function getOrCreateMercadoPagoCheckoutUrl(purchase: PurchaseWithTickets) 
       },
       items: [
         {
-          title: `Bingo Bekeff 2026 · ${purchase.code}`,
+          title: `${purchase.event.name} · ${purchase.code}`,
           quantity: 1,
           unit_price: purchase.totalCents / 100,
           currency_id: "ARS",
@@ -80,7 +80,7 @@ async function getOrCreateMercadoPagoCheckoutUrl(purchase: PurchaseWithTickets) 
       back_urls: {
         success: `${appUrl}/confirmacion/${purchase.code}`,
         pending: `${appUrl}/confirmacion/${purchase.code}`,
-        failure: `${appUrl}/reservar/pago/${purchase.code}`,
+        failure: `${appUrl}/${purchase.items.length > 0 ? "pedido" : "reservar/pago"}/${purchase.code}`,
       },
       auto_return: "approved",
       binary_mode: false,

@@ -6,6 +6,7 @@ import { Logo } from "@/components/shared/logo";
 import { Money } from "@/components/shared/money";
 import { WizardResetOnMount } from "@/components/wizard/wizard-reset-on-mount";
 import { getPurchaseByCode } from "@/server/services/purchase.service";
+import { StatusBadge } from "@/components/shared/status-badge";
 
 const dateFormatter = new Intl.DateTimeFormat("es-AR", {
   weekday: "long",
@@ -40,6 +41,19 @@ export default async function ConfirmacionPage({
   const { code } = await params;
   const purchase = await getPurchaseByCode(code);
   if (!purchase) notFound();
+
+  if (purchase.items.length > 0) {
+    return <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center px-6 py-14 text-center">
+      <Link href="/" className="text-xl font-extrabold text-primary">LAMROTH</Link>
+      <CheckCircle2 className="mt-8 size-12 text-primary" />
+      <h1 className="mt-5 text-3xl font-semibold">{purchase.status === "CONFIRMED" ? "¡Tu pago está confirmado!" : purchase.receiptUrl ? "¡Recibimos tu comprobante!" : "Tu pedido está registrado."}</h1>
+      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{purchase.status === "CONFIRMED" ? "Entrega en sedes de Lamroth. Guardá el código de tu pedido." : purchase.receiptUrl ? "El pago se confirmará después de la revisión manual del comprobante." : "El regreso desde Mercado Pago no confirma el pago automáticamente. Cargá el comprobante desde tu pedido para que podamos verificarlo."}</p>
+      <div className="mt-5"><StatusBadge status={purchase.status} /></div>
+      <div className="mt-7 w-full space-y-4 border-y py-5 text-left"><p className="text-sm">Pedido <strong>{purchase.code}</strong></p>{purchase.items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><span>{item.quantity} × {item.name}{item.size ? ` · Talle ${item.size}` : ""}</span><Money cents={item.subtotalCents} /></div>)}<div className="flex justify-between border-t pt-4 font-semibold"><span>Total</span><Money cents={purchase.totalCents} /></div></div>
+      <Button asChild className="mt-7 w-full"><Link href={`/pedido/${purchase.code}`}>Ver mi pedido y estado del pago</Link></Button>
+      <Link href="/" className="mt-5 text-sm underline underline-offset-4">Volver a la tienda</Link>
+    </main>;
+  }
 
   return (
     <div className="flex min-h-full flex-1 flex-col items-center justify-center px-6 py-16 text-center">

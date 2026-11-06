@@ -62,7 +62,7 @@ export function ComprobanteLookupUploader() {
             id="code"
             value={code}
             onChange={(event) => setCode(event.target.value)}
-            placeholder="Ej: BK26-ABC123"
+            placeholder="Ej: LH26-ABC123"
             autoCapitalize="characters"
             required
           />
