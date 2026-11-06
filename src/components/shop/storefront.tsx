@@ -132,7 +132,6 @@ function Product({ id, index, available, onCart }: { id: ProductId; index: numbe
   const add = useShopStore((state) => state.add);
   const descriptions = {
     remera: "Blanca. Con nuestros nombres, nuestra identidad y todo lo que nos une.",
-    botella: "600 ml para acompañarte a todas partes. Aluminio ligero y resistente, con colgante de silicona negra.",
     toallon: "El azul de Lamroth, también en tus días de sol. Toallón azul con identidad Majané 2026.",
   };
   function addProduct() {
@@ -148,8 +147,7 @@ function Product({ id, index, available, onCart }: { id: ProductId; index: numbe
         <Image src={productImages[id]} alt={id === "remera" ? "Frente, espalda y detalle de la remera de Shabat" : product.name} sizes="(max-width: 760px) 100vw, 33vw" />
       </div>
       <div className={styles.productTitle}><h3>{product.name}</h3><strong>{formatPrice(product.priceCents)}</strong></div>
-      <p className={styles.productDescription}>{descriptions[id]}</p>
-      {id === "botella" && <p className={styles.productNote}>23 cm de alto · 6 cm de diámetro · Sin elección de color</p>}
+      {id !== "botella" && <p className={styles.productDescription}>{descriptions[id]}</p>}
       {product.requiresSize && <fieldset className={styles.sizes} aria-describedby={sizeError ? "size-error" : undefined}>
         <legend>Elegí tu talle <span>Obligatorio</span></legend>
         <div>{SHIRT_SIZES.map((option) => <label key={option} className={size === option ? styles.selectedSize : ""}>
