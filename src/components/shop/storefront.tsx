@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { createShopOrder } from "@/server/actions/shop.actions";
 import { formatPrice, isPresaleOpen, PRODUCTS, SHIRT_SIZES, type ProductId } from "@/lib/shop";
 import { useShopStore } from "@/store/shop-store";
-import shirtImage from "../../../info/Remera majane shabat v1.png";
+import shirtImage from "../../../info/Remera majane shabat v2.png";
 import bottleImage from "../../../info/Botellas LAMROTH.png";
 import towelImage from "../../../info/Toalla azul LAMROTH.png";
 import styles from "./storefront.module.css";
