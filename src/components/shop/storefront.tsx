@@ -70,7 +70,7 @@ export function Storefront({ open }: { open: boolean }) {
             <Image src={shirtImage} alt="Remera blanca de Shabat Lamroth: frente con logo y espalda con diseño de nombres formando las velas" priority sizes="100vw" />
           </div>
           <div className={styles.heroSticker} aria-label="Precio especial de preventa: 15.000 pesos">
-            <span>PRECIO PREVENTA</span><strong>$15.000</strong><span>HASTA EL 13/11</span>
+            <span>DONACIÓN PREVENTA</span><strong>$15.000</strong><span>HASTA EL 13/11</span>
           </div>
           <div className={styles.heroBottom}>
             <p>No te podés quedar sin<br /><strong>la remera de Shabat.</strong></p>
@@ -144,7 +144,7 @@ function Product({ id, index, available, onCart }: { id: ProductId; index: numbe
     <article className={styles.product}>
       <div className={`${styles.productImage} ${styles[id]}`}>
         <span className={styles.productNumber}>0{index + 1}</span>
-        <span className={styles.productTag}>{id === "remera" ? "LA PROTAGONISTA" : "PRECIO PREVENTA"}</span>
+        <span className={styles.productTag}>{id === "remera" ? "LA PROTAGONISTA" : "DONACIÓN PREVENTA"}</span>
         <Image src={productImages[id]} alt={id === "remera" ? "Frente, espalda y detalle de la remera de Shabat" : product.name} sizes="(max-width: 760px) 100vw, 33vw" />
       </div>
       <div className={styles.productTitle}><h3>{product.name}</h3><strong>{formatPrice(product.priceCents)}</strong></div>
