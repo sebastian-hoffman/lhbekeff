@@ -17,6 +17,22 @@ export type DashboardStats = {
   ticketsSoldByCategory: Record<TicketCategory, number>;
 };
 
+export type ProductSalesSummary = {
+  productId: string;
+  name: string;
+  quantity: number;
+  totalCents: number;
+};
+
+export type DailySalesPoint = {
+  date: string;
+  label: string;
+  amountCents: number;
+};
+
+const DAILY_SALES_DAYS = 14;
+const SALES_TIME_ZONE = "America/Argentina/Buenos_Aires";
+
 export async function getDashboardStats(): Promise<DashboardStats> {
   const [
     totalPurchases,
@@ -83,4 +99,75 @@ export async function getProductOrderSummary() {
     summary.set(key, total);
   }
   return [...summary.values()].sort((first, second) => first.productId.localeCompare(second.productId) || (first.size ?? "").localeCompare(second.size ?? "", "es", { numeric: true }));
+}
+
+export async function getProductSalesSummary(): Promise<ProductSalesSummary[]> {
+  const rows = await prisma.purchaseItem.findMany({
+    where: { purchase: { status: PurchaseStatus.CONFIRMED } },
+    select: { productId: true, name: true, quantity: true, subtotalCents: true },
+  });
+  const summary = new Map<string, ProductSalesSummary>();
+
+  for (const row of rows) {
+    const total = summary.get(row.productId) ?? {
+      productId: row.productId,
+      name: row.name,
+      quantity: 0,
+      totalCents: 0,
+    };
+    total.quantity += row.quantity;
+    total.totalCents += row.subtotalCents;
+    summary.set(row.productId, total);
+  }
+
+  return [...summary.values()].sort((first, second) => second.totalCents - first.totalCents);
+}
+
+export async function getDailySalesSummary(now = new Date()): Promise<DailySalesPoint[]> {
+  const today = getSalesDateKey(now);
+  const [year, month, day] = today.split("-").map(Number);
+  const dates = Array.from({ length: DAILY_SALES_DAYS }, (_, index) => {
+    const date = new Date(Date.UTC(year, month - 1, day - DAILY_SALES_DAYS + 1 + index));
+    return date.toISOString().slice(0, 10);
+  });
+  const firstDayStart = new Date(`${dates[0]}T00:00:00.000-03:00`);
+  const purchases = await prisma.purchase.findMany({
+    where: {
+      status: PurchaseStatus.CONFIRMED,
+      OR: [
+        { confirmedAt: { gte: firstDayStart } },
+        { confirmedAt: null, createdAt: { gte: firstDayStart } },
+      ],
+    },
+    select: { confirmedAt: true, createdAt: true, totalCents: true },
+  });
+  const totals = new Map(dates.map((date) => [date, 0]));
+
+  for (const purchase of purchases) {
+    const date = getSalesDateKey(purchase.confirmedAt ?? purchase.createdAt);
+    if (totals.has(date)) totals.set(date, totals.get(date)! + purchase.totalCents);
+  }
+
+  const labelFormatter = new Intl.DateTimeFormat("es-AR", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+
+  return dates.map((date) => ({
+    date,
+    label: labelFormatter.format(new Date(`${date}T12:00:00.000Z`)).replace(/\.$/, ""),
+    amountCents: totals.get(date) ?? 0,
+  }));
+}
+
+function getSalesDateKey(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: SALES_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${values.year}-${values.month}-${values.day}`;
 }
