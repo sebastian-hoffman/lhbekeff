@@ -9,7 +9,7 @@ const CATEGORY_ORDER = ["ADULT", "MINOR", "FREE"] as const;
 export function DashboardStatsGrid({ stats }: { stats: DashboardStats }) {
   const countCards = [
     { label: "Compras totales", value: stats.totalPurchases, icon: Ticket },
-    { label: "Pendientes", value: stats.pendingPurchases, icon: Clock },
+    { label: "Pedidos por confirmar", value: stats.pendingPurchases, icon: Clock },
     { label: "Confirmadas", value: stats.confirmedPurchases, icon: CheckCircle2 },
     { label: "Entradas ingresadas", value: stats.checkedInCount, icon: Ticket },
   ];
@@ -17,6 +17,7 @@ export function DashboardStatsGrid({ stats }: { stats: DashboardStats }) {
   const moneyCards = [
     { label: "Total esperado", cents: stats.expectedTotalCents, icon: Wallet },
     { label: "Total confirmado", cents: stats.confirmedTotalCents, icon: WalletMinimal },
+    { label: "Monto por confirmar", cents: stats.pendingTotalCents, icon: Clock },
   ];
 
   return (
@@ -28,7 +29,7 @@ export function DashboardStatsGrid({ stats }: { stats: DashboardStats }) {
           </StatCard>
         ))}
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {moneyCards.map(({ label, cents, icon }) => (
           <StatCard key={label} label={label} icon={icon}>
             <span className="text-2xl font-semibold tabular-nums">

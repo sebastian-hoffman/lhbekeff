@@ -12,6 +12,8 @@ export type DashboardStats = {
   expectedTotalCents: number;
   /** Suma de compras ya confirmadas. */
   confirmedTotalCents: number;
+  /** Suma de compras que todavía esperan confirmación. */
+  pendingTotalCents: number;
   checkedInCount: number;
   /** Entradas vendidas (compras confirmadas) acumuladas por categoría. */
   ticketsSoldByCategory: Record<TicketCategory, number>;
@@ -80,9 +82,27 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     rejectedPurchases,
     expectedTotalCents: expectedAgg._sum.totalCents ?? 0,
     confirmedTotalCents: confirmedAgg._sum.totalCents ?? 0,
+    pendingTotalCents:
+      (expectedAgg._sum.totalCents ?? 0) - (confirmedAgg._sum.totalCents ?? 0),
     checkedInCount,
     ticketsSoldByCategory,
   };
+}
+
+export function getRecentPendingPurchases(limit = 8) {
+  return prisma.purchase.findMany({
+    where: { status: PurchaseStatus.PENDING },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      code: true,
+      buyerName: true,
+      buyerEmail: true,
+      totalCents: true,
+      createdAt: true,
+    },
+  });
 }
 
 export async function getProductOrderSummary() {
