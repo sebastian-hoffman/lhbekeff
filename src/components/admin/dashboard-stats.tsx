@@ -1,10 +1,7 @@
 import type { ComponentType } from "react";
 import { CheckCircle2, Clock, Ticket, Wallet, WalletMinimal } from "lucide-react";
 import { Money } from "@/components/shared/money";
-import { categoryLabelPlural } from "@/lib/ticket-number";
 import type { DashboardStats } from "@/server/services/dashboard.service";
-
-const CATEGORY_ORDER = ["ADULT", "MINOR", "FREE"] as const;
 
 export function DashboardStatsGrid({ stats }: { stats: DashboardStats }) {
   const countCards = [
@@ -39,19 +36,6 @@ export function DashboardStatsGrid({ stats }: { stats: DashboardStats }) {
         ))}
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="text-sm text-muted-foreground">Entradas vendidas por categoría</p>
-        <div className="mt-3 grid grid-cols-3 divide-x divide-border">
-          {CATEGORY_ORDER.map((category) => (
-            <div key={category} className="px-2 text-center first:pl-0 last:pr-0">
-              <p className="text-2xl font-semibold tabular-nums">
-                {stats.ticketsSoldByCategory[category]}
-              </p>
-              <p className="text-xs text-muted-foreground">{categoryLabelPlural(category)}</p>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

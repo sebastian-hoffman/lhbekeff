@@ -1,7 +1,8 @@
 import "server-only";
 
-import { PurchaseStatus, TicketCategory } from "@/generated/prisma/client";
+import { PurchaseStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { PRODUCTS } from "@/lib/shop";
 
 export type DashboardStats = {
   totalPurchases: number;
@@ -15,8 +16,6 @@ export type DashboardStats = {
   /** Suma de compras que todavía esperan confirmación. */
   pendingTotalCents: number;
   checkedInCount: number;
-  /** Entradas vendidas (compras confirmadas) acumuladas por categoría. */
-  ticketsSoldByCategory: Record<TicketCategory, number>;
 };
 
 export type ProductSalesSummary = {
@@ -24,6 +23,12 @@ export type ProductSalesSummary = {
   name: string;
   quantity: number;
   totalCents: number;
+};
+
+export type ProductOrderStatusSummary = {
+  pending: ProductSalesSummary[];
+  confirmed: ProductSalesSummary[];
+  total: ProductSalesSummary[];
 };
 
 export type DailySalesPoint = {
@@ -44,7 +49,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     expectedAgg,
     confirmedAgg,
     checkedInCount,
-    ticketsByCategory,
   ] = await Promise.all([
     prisma.purchase.count(),
     prisma.purchase.count({ where: { status: PurchaseStatus.PENDING } }),
@@ -59,21 +63,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       where: { status: PurchaseStatus.CONFIRMED },
     }),
     prisma.ticket.count({ where: { checkedIn: true } }),
-    prisma.ticket.groupBy({
-      by: ["category"],
-      where: { purchase: { status: PurchaseStatus.CONFIRMED } },
-      _count: { _all: true },
-    }),
   ]);
-
-  const ticketsSoldByCategory: Record<TicketCategory, number> = {
-    ADULT: 0,
-    MINOR: 0,
-    FREE: 0,
-  };
-  for (const row of ticketsByCategory) {
-    ticketsSoldByCategory[row.category] = row._count._all;
-  }
 
   return {
     totalPurchases,
@@ -85,7 +75,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     pendingTotalCents:
       (expectedAgg._sum.totalCents ?? 0) - (confirmedAgg._sum.totalCents ?? 0),
     checkedInCount,
-    ticketsSoldByCategory,
   };
 }
 
@@ -121,26 +110,51 @@ export async function getProductOrderSummary() {
   return [...summary.values()].sort((first, second) => first.productId.localeCompare(second.productId) || (first.size ?? "").localeCompare(second.size ?? "", "es", { numeric: true }));
 }
 
-export async function getProductSalesSummary(): Promise<ProductSalesSummary[]> {
+export async function getProductOrderStatusSummary(): Promise<ProductOrderStatusSummary> {
   const rows = await prisma.purchaseItem.findMany({
-    where: { purchase: { status: PurchaseStatus.CONFIRMED } },
-    select: { productId: true, name: true, quantity: true, subtotalCents: true },
+    where: {
+      purchase: {
+        status: { in: [PurchaseStatus.PENDING, PurchaseStatus.CONFIRMED] },
+      },
+    },
+    select: {
+      productId: true,
+      name: true,
+      quantity: true,
+      subtotalCents: true,
+      purchase: { select: { status: true } },
+    },
   });
-  const summary = new Map<string, ProductSalesSummary>();
 
-  for (const row of rows) {
-    const total = summary.get(row.productId) ?? {
-      productId: row.productId,
-      name: row.name,
+  const createSummary = () =>
+    PRODUCTS.map((product) => ({
+      productId: product.id,
+      name: product.name,
       quantity: 0,
       totalCents: 0,
-    };
-    total.quantity += row.quantity;
-    total.totalCents += row.subtotalCents;
-    summary.set(row.productId, total);
+    }));
+  const summary: ProductOrderStatusSummary = {
+    pending: createSummary(),
+    confirmed: createSummary(),
+    total: createSummary(),
+  };
+  const productByStatus = {
+    pending: new Map(summary.pending.map((product) => [product.productId, product])),
+    confirmed: new Map(summary.confirmed.map((product) => [product.productId, product])),
+    total: new Map(summary.total.map((product) => [product.productId, product])),
+  };
+
+  for (const row of rows) {
+    const status = row.purchase.status === PurchaseStatus.PENDING ? "pending" : "confirmed";
+    for (const target of [productByStatus[status], productByStatus.total]) {
+      const product = target.get(row.productId);
+      if (!product) continue;
+      product.quantity += row.quantity;
+      product.totalCents += row.subtotalCents;
+    }
   }
 
-  return [...summary.values()].sort((first, second) => second.totalCents - first.totalCents);
+  return summary;
 }
 
 export async function getDailySalesSummary(now = new Date()): Promise<DailySalesPoint[]> {

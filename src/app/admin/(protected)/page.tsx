@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { DashboardStatsGrid } from "@/components/admin/dashboard-stats";
-import { DailySalesChart, ProductSalesSummaryTable } from "@/components/admin/dashboard-sales";
+import { DailySalesChart, ProductOrderStatusCards } from "@/components/admin/dashboard-sales";
 import { Money } from "@/components/shared/money";
-import { getDailySalesSummary, getDashboardStats, getProductOrderSummary, getProductSalesSummary, getRecentPendingPurchases } from "@/server/services/dashboard.service";
+import { getDailySalesSummary, getDashboardStats, getProductOrderStatusSummary, getProductOrderSummary, getRecentPendingPurchases } from "@/server/services/dashboard.service";
 
 const pendingPurchaseDateFormatter = new Intl.DateTimeFormat("es-AR", {
   day: "2-digit",
@@ -15,11 +15,11 @@ const pendingPurchaseDateFormatter = new Intl.DateTimeFormat("es-AR", {
 });
 
 export default async function AdminDashboardPage() {
-  const [stats, pendingPurchases, productsBySize, productSales, dailySales] = await Promise.all([
+  const [stats, pendingPurchases, productsBySize, productOrderSummary, dailySales] = await Promise.all([
     getDashboardStats(),
     getRecentPendingPurchases(),
     getProductOrderSummary(),
-    getProductSalesSummary(),
+    getProductOrderStatusSummary(),
     getDailySalesSummary(),
   ]);
 
@@ -82,7 +82,7 @@ export default async function AdminDashboardPage() {
           </div>
         )}
       </section>
-      <ProductSalesSummaryTable products={productSales} />
+      <ProductOrderStatusCards summary={productOrderSummary} />
       <DailySalesChart points={dailySales} />
       <section className="border-t pt-6">
         <h2 className="text-lg font-semibold">Preventa · Productos por talle</h2>
