@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowRight, Check, CheckCircle2, CreditCard, Loader2, MapPin, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowRight, Check, CheckCircle2, CreditCard, Loader2, Mail, MapPin, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { createShopOrder } from "@/server/actions/shop.actions";
 import { formatPrice, isPresaleOpen, PRODUCTS, SHIRT_SIZES, type ProductId } from "@/lib/shop";
@@ -46,6 +46,15 @@ export function Storefront({ open }: { open: boolean }) {
           <a href="#productos">La colección</a>
           <a href="#preventa">La preventa</a>
         </nav>
+        <a
+          href="mailto:lhbekeff2026@gmail.com"
+          className={styles.contactButton}
+          title="Contacto por correo electrónico"
+          aria-label="Enviar correo a lhbekeff2026@gmail.com"
+        >
+          <Mail size={15} aria-hidden="true" />
+          <span>Contacto</span>
+        </a>
         <Dialog open={cartOpen} onOpenChange={setCartOpen}>
           <DialogTrigger asChild>
             <button className={styles.cartButton} aria-label={`Abrir carrito, ${quantity} productos`}>
@@ -117,7 +126,12 @@ export function Storefront({ open }: { open: boolean }) {
       <footer className={styles.footer}>
         <Link href="/" className={styles.footerBrand}>LAMROTH<span>LO QUE NOS UNE.</span></Link>
         <p>MAJANÉ 2026<br />Hecho para ser parte.</p>
-        <Link href="/comprobante">Cargar comprobante <ArrowRight size={15} /></Link>
+        <Link href="/comprobante" className={styles.footerReceipt}>
+          Cargar comprobante <ArrowRight size={15} />
+        </Link>
+        <a href="mailto:lhbekeff2026@gmail.com" className={styles.footerContact}>
+          Contacto: lhbekeff2026@gmail.com
+        </a>
         <span>© 2026 Lamroth</span>
       </footer>
     </div>
