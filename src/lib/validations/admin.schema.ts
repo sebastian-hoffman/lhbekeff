@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BUYER_GROUPS } from "@/lib/buyer-groups";
 
 export const adminLoginSchema = z.object({
   email: z.email("Ingresá un email válido."),
@@ -21,3 +22,9 @@ export const deletePurchaseSchema = z.object({
   purchaseId: z.cuid(),
 });
 export type DeletePurchaseInput = z.infer<typeof deletePurchaseSchema>;
+
+export const updatePurchaseGroupsSchema = z.object({
+  purchaseId: z.cuid(),
+  groups: z.array(z.enum(BUYER_GROUPS)).max(BUYER_GROUPS.length),
+});
+export type UpdatePurchaseGroupsInput = z.infer<typeof updatePurchaseGroupsSchema>;

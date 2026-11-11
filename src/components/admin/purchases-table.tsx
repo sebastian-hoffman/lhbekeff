@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Download,
   Eye,
   MoreHorizontal,
   Search,
@@ -66,9 +67,21 @@ const dateFormatter = new Intl.DateTimeFormat("es-AR", {
   minute: "2-digit",
 });
 
+const STATUS_LABELS: Record<PurchaseListItem["status"], string> = {
+  PENDING: "Pendiente",
+  CONFIRMED: "Confirmada",
+  REJECTED: "Rechazada",
+};
+
+function csvCell(value: string) {
+  const safeValue = /^[\t\r ]*[=+\-@]/.test(value) ? `'${value}` : value;
+  return `"${safeValue.replaceAll('"', '""')}"`;
+}
+
 export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
   const router = useRouter();
   const [globalFilter, setGlobalFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<PurchaseListItem["status"] | "ALL">("ALL");
   const [actionError, setActionError] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<PurchaseListItem | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -138,6 +151,13 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
     { accessorKey: "buyerEmail", header: "Email" },
     { accessorKey: "buyerPhone", header: "Teléfono" },
     {
+      accessorKey: "buyerGroups",
+      header: "Grupos",
+      cell: ({ row }) => row.original.buyerGroups.length > 0
+        ? <span className="block max-w-48 text-xs leading-relaxed">{row.original.buyerGroups.join(", ")}</span>
+        : <span className="text-muted-foreground">N/A</span>,
+    },
+    {
       accessorKey: "totalCents",
       header: "Total",
       cell: ({ getValue }) => <Money cents={getValue<number>()} />,
@@ -194,8 +214,12 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
     },
   ];
 
+  const filteredData = statusFilter === "ALL"
+    ? data
+    : data.filter((purchase) => purchase.status === statusFilter);
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: { globalFilter },
     onGlobalFilterChange: setGlobalFilter,
@@ -206,16 +230,64 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
     initialState: { pagination: { pageSize: 15 } },
   });
 
+  function downloadCsv() {
+    const purchases = table.getFilteredRowModel().rows.map((row) => row.original);
+    const csvRows = [
+      ["Fecha", "Código", "Comprador", "Email", "Teléfono", "Grupos", "Estado", "Total (ARS)"],
+      ...purchases.map((purchase) => [
+        dateFormatter.format(purchase.createdAt),
+        purchase.code,
+        purchase.buyerName,
+        purchase.buyerEmail,
+        purchase.buyerPhone,
+        purchase.buyerGroups.length > 0 ? purchase.buyerGroups.join(", ") : "N/A",
+        STATUS_LABELS[purchase.status],
+        (purchase.totalCents / 100).toFixed(2),
+      ]),
+    ];
+    const content = `\uFEFF${csvRows.map((row) => row.map(csvCell).join(";")).join("\r\n")}`;
+    const url = URL.createObjectURL(new Blob([content], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `compras-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="space-y-4">
-      <div className="relative max-w-sm">
-        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por nombre, email o código…"
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="pl-9"
-        />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nombre, email o código…"
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <span className="sr-only">Filtrar por estado</span>
+            <select
+              aria-label="Filtrar compras por estado"
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:w-auto"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.currentTarget.value as PurchaseListItem["status"] | "ALL")}
+            >
+              <option value="ALL">Todos los estados</option>
+              <option value="PENDING">Pendientes</option>
+              <option value="CONFIRMED">Confirmadas</option>
+              <option value="REJECTED">Rechazadas</option>
+            </select>
+          </label>
+        </div>
+        <Button type="button" variant="outline" onClick={downloadCsv} disabled={table.getFilteredRowModel().rows.length === 0}>
+          <Download className="size-4" />
+          Descargar CSV
+        </Button>
       </div>
 
       {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}

@@ -16,6 +16,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Money } from "@/components/shared/money";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { PurchaseGroupsEditor } from "@/components/admin/purchase-groups-editor";
+import { isBuyerGroup } from "@/lib/buyer-groups";
 import { categoryLabel } from "@/lib/ticket-number";
 import {
   confirmPurchase,
@@ -117,6 +119,12 @@ export function PurchaseDetailView({ purchase }: { purchase: PurchaseDetail }) {
           <Row label="Nombre">{purchase.buyerName}</Row>
           <Row label="Email">{purchase.buyerEmail}</Row>
           <Row label="Celular">{purchase.buyerPhone}</Row>
+          <div className="mt-4 border-t pt-4">
+            <PurchaseGroupsEditor
+              purchaseId={purchase.id}
+              initialGroups={purchase.buyerGroups.filter(isBuyerGroup)}
+            />
+          </div>
         </Section>
 
         <Section title="Comprobante">

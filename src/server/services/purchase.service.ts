@@ -12,6 +12,7 @@ export function listPurchases() {
       buyerName: true,
       buyerEmail: true,
       buyerPhone: true,
+      buyerGroups: true,
       totalCents: true,
       status: true,
       createdAt: true,

@@ -10,9 +10,11 @@ import {
   confirmPurchaseSchema,
   deletePurchaseSchema,
   rejectPurchaseSchema,
+  updatePurchaseGroupsSchema,
   type ConfirmPurchaseInput,
   type DeletePurchaseInput,
   type RejectPurchaseInput,
+  type UpdatePurchaseGroupsInput,
 } from "@/lib/validations/admin.schema";
 
 export type AdminActionResult = { success: true } | { success: false; error: string };
@@ -132,5 +134,27 @@ export async function rejectPurchase(input: RejectPurchaseInput): Promise<AdminA
   }
 
   revalidatePurchaseViews(purchaseId);
+  return { success: true };
+}
+
+export async function updatePurchaseGroups(
+  input: UpdatePurchaseGroupsInput,
+): Promise<AdminActionResult> {
+  const session = await getAdminSession();
+  if (!session) return { success: false, error: "No autorizado." };
+
+  const parsed = updatePurchaseGroupsSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Revisá los grupos seleccionados." };
+
+  try {
+    await prisma.purchase.update({
+      where: { id: parsed.data.purchaseId },
+      data: { buyerGroups: [...new Set(parsed.data.groups)] },
+    });
+  } catch {
+    return { success: false, error: "No se pudieron guardar los grupos de la compra." };
+  }
+
+  revalidatePurchaseViews(parsed.data.purchaseId);
   return { success: true };
 }

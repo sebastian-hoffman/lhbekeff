@@ -69,6 +69,7 @@ model Purchase {
   buyerName  String
   buyerEmail String
   buyerPhone String
+  buyerGroups String[] @default([])
 
   adultQty Int
   minorQty Int
