@@ -1,10 +1,11 @@
 import "server-only";
 
+import { createReceiptShareToken } from "@/lib/receipt-share";
 import { prisma } from "@/lib/prisma";
 
 /** Listado liviano para la tabla de compras del panel admin. */
-export function listPurchases() {
-  return prisma.purchase.findMany({
+export async function listPurchases() {
+  const purchases = await prisma.purchase.findMany({
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -13,11 +14,18 @@ export function listPurchases() {
       buyerEmail: true,
       buyerPhone: true,
       buyerGroups: true,
+      receiptUrl: true,
+      receiptMimeType: true,
       totalCents: true,
       status: true,
       createdAt: true,
     },
   });
+
+  return Promise.all(purchases.map(async ({ receiptUrl, ...purchase }) => ({
+    ...purchase,
+    receiptShareToken: receiptUrl ? await createReceiptShareToken(receiptUrl) : null,
+  })));
 }
 
 export type PurchaseListItem = Awaited<ReturnType<typeof listPurchases>>[number];

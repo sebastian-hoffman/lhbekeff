@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Copy,
   Download,
   Eye,
   MoreHorizontal,
@@ -78,10 +79,15 @@ function csvCell(value: string) {
   return `"${safeValue.replaceAll('"', '""')}"`;
 }
 
+function receiptShareHref(token: string) {
+  return `/api/shared-receipts/${encodeURIComponent(token)}`;
+}
+
 export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
   const router = useRouter();
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<PurchaseListItem["status"] | "ALL">("ALL");
+  const [copiedReceiptId, setCopiedReceiptId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<PurchaseListItem | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -132,6 +138,18 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
     });
   }
 
+  async function copyReceiptLink(purchase: PurchaseListItem) {
+    if (!purchase.receiptShareToken) return;
+    try {
+      const url = new URL(receiptShareHref(purchase.receiptShareToken), window.location.origin).toString();
+      await navigator.clipboard.writeText(url);
+      setCopiedReceiptId(purchase.id);
+      setActionError(null);
+    } catch {
+      setActionError("No se pudo copiar el enlace. Abrí el comprobante y copiá la dirección del navegador.");
+    }
+  }
+
   const columns: ColumnDef<PurchaseListItem>[] = [
     {
       accessorKey: "createdAt",
@@ -156,6 +174,41 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
       cell: ({ row }) => row.original.buyerGroups.length > 0
         ? <span className="block max-w-48 text-xs leading-relaxed">{row.original.buyerGroups.join(", ")}</span>
         : <span className="text-muted-foreground">N/A</span>,
+    },
+    {
+      id: "receipt",
+      header: "Comprobante",
+      cell: ({ row }) => {
+        const purchase = row.original;
+        if (!purchase.receiptShareToken) {
+          return <span className="text-muted-foreground">No recibido</span>;
+        }
+        const format = purchase.receiptMimeType?.split("/").at(-1)?.toUpperCase() ?? "Archivo";
+        return (
+          <div className="min-w-36 space-y-1">
+            <p className="text-xs text-muted-foreground">Recibido · {format}</p>
+            <div className="flex items-center gap-2 text-xs">
+              <a
+                href={receiptShareHref(purchase.receiptShareToken)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary underline underline-offset-4"
+              >
+                Abrir
+              </a>
+              <button
+                type="button"
+                onClick={() => void copyReceiptLink(purchase)}
+                className="inline-flex items-center gap-1 font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                aria-label={`Copiar link del comprobante ${purchase.code}; vence en 7 días`}
+              >
+                <Copy className="size-3" aria-hidden="true" />
+                {copiedReceiptId === purchase.id ? "Copiado" : "Copiar link"}
+              </button>
+            </div>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "totalCents",
@@ -233,7 +286,7 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
   function downloadCsv() {
     const purchases = table.getFilteredRowModel().rows.map((row) => row.original);
     const csvRows = [
-      ["Fecha", "Código", "Comprador", "Email", "Teléfono", "Grupos", "Estado", "Total (ARS)"],
+      ["Fecha", "Código", "Comprador", "Email", "Teléfono", "Grupos", "Estado", "Comprobante", "Formato", "Link compartible (7 días)", "Total (ARS)"],
       ...purchases.map((purchase) => [
         dateFormatter.format(purchase.createdAt),
         purchase.code,
@@ -242,6 +295,11 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
         purchase.buyerPhone,
         purchase.buyerGroups.length > 0 ? purchase.buyerGroups.join(", ") : "N/A",
         STATUS_LABELS[purchase.status],
+        purchase.receiptShareToken ? "Recibido" : "No recibido",
+        purchase.receiptMimeType ?? "",
+        purchase.receiptShareToken
+          ? new URL(receiptShareHref(purchase.receiptShareToken), window.location.origin).toString()
+          : "",
         (purchase.totalCents / 100).toFixed(2),
       ]),
     ];
@@ -289,6 +347,9 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
           Descargar CSV
         </Button>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Los links compartibles de comprobantes vencen a los 7 días y dan acceso únicamente a ese archivo.
+      </p>
 
       {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
 
