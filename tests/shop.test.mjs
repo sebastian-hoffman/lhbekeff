@@ -6,17 +6,18 @@ test("prices are server-owned and different shirt sizes can coexist", () => {
   const items = priceCart([
     { productId: "remera", size: "6", quantity: 2, unitPriceCents: 1 },
     { productId: "remera", size: "XL", quantity: 1 },
+    { productId: "remera", size: "2XL", quantity: 1 },
     { productId: "botella", size: "", quantity: 1 },
     { productId: "toallon", size: "", quantity: 1 },
   ]);
-  assert.equal(items.reduce((total, item) => total + item.subtotalCents, 0), 7300000);
-  assert.deepEqual(SHIRT_SIZES, ["6", "8", "10", "12", "14", "16", "S", "M", "L", "XL"]);
+  assert.equal(items.reduce((total, item) => total + item.subtotalCents, 0), 8800000);
+  assert.deepEqual(SHIRT_SIZES, ["6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "2XL"]);
 });
 
 test("invalid sizes, products, variants and quantities cannot be ordered", () => {
   for (const item of [
     { productId: "remera", size: "", quantity: 1 },
-    { productId: "remera", size: "XXL", quantity: 1 },
+    { productId: "remera", size: "3XL", quantity: 1 },
     { productId: "botella", size: "blanca", quantity: 1 },
     { productId: "unknown", size: "", quantity: 1 },
     { productId: "toallon", size: "", quantity: -1 },

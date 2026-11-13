@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowRight, Check, CheckCircle2, CreditCard, Loader2, Mail, MapPin, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowRight, Check, CheckCircle2, CreditCard, Loader2, Mail, MapPin, Minus, Plus, Ruler, ShoppingBag, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { createShopOrder } from "@/server/actions/shop.actions";
 import { formatPrice, isPresaleOpen, PRODUCTS, SHIRT_SIZES, type ProductId } from "@/lib/shop";
@@ -114,7 +114,7 @@ export function Storefront({ open }: { open: boolean }) {
         <section className={styles.faq} aria-labelledby="faq-title">
           <h2 id="faq-title">Antes de pedir.</h2>
           <div>
-            <details><summary>¿Qué talles tiene la remera?</summary><p>Talles 6, 8, 10, 12, 14 y 16; S, M, L y XL. Elegí el talle antes de sumar cada remera. La tabla de medidas todavía no está disponible.</p></details>
+            <details><summary>¿Qué talles tiene la remera?</summary><p>Talles 6, 8, 10, 12, 14 y 16; S, M, L, XL y 2XL. La guía con medidas para S a 2XL está disponible junto al selector de talle.</p></details>
             <details><summary>¿Puedo comprar varios productos y talles?</summary><p>Sí. Agregá cada talle al carrito por separado y elegí la cantidad que necesitás. Podés sumar botellitas y toallones al mismo pedido.</p></details>
             <details><summary>¿Se puede elegir el color de la botella?</summary><p>No se elige color. La imagen muestra los acabados del producto. La botella es de aluminio, tiene 600 ml de capacidad y colgante de silicona negra.</p></details>
             <details><summary>¿Cómo recibo mi pedido?</summary><p>La entrega se realiza en sedes de Lamroth. La fecha y la coordinación del retiro se informarán próximamente. No se ofrece envío a domicilio.</p></details>
@@ -141,6 +141,7 @@ export function Storefront({ open }: { open: boolean }) {
 function Product({ id, index, available, onCart }: { id: ProductId; index: number; available: boolean; onCart: () => void }) {
   const product = PRODUCTS.find((entry) => entry.id === id)!;
   const [size, setSize] = useState("");
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [sizeError, setSizeError] = useState(false);
   const add = useShopStore((state) => state.add);
@@ -162,13 +163,70 @@ function Product({ id, index, available, onCart }: { id: ProductId; index: numbe
       </div>
       <div className={styles.productTitle}><h3>{product.name}</h3><strong>{formatPrice(product.priceCents)}</strong></div>
       {id !== "botella" && <p className={styles.productDescription}>{descriptions[id]}</p>}
-      {product.requiresSize && <fieldset className={styles.sizes} aria-describedby={sizeError ? "size-error" : undefined}>
-        <legend>Elegí tu talle <span>Obligatorio</span></legend>
-        <div>{SHIRT_SIZES.map((option) => <label key={option} className={size === option ? styles.selectedSize : ""}>
-          <input type="radio" name="shirt-size" value={option} checked={size === option} onChange={() => { setSize(option); setSizeError(false); }} /><span>{option}</span>
-        </label>)}</div>
-        {sizeError && <p id="size-error" role="alert" className={styles.error}>Elegí un talle para agregar la remera.</p>}
-      </fieldset>}
+      {product.requiresSize && <>
+        <div className={styles.sizeGuideActions}>
+          <span className={styles.sizeLabel}>Talle</span>
+          <Dialog open={sizeGuideOpen} onOpenChange={setSizeGuideOpen}>
+            <DialogTrigger asChild>
+              <button type="button" className={styles.sizeGuideTrigger}>
+                <Ruler size={14} aria-hidden="true" /> Guía de talles
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl">
+              <DialogHeader>
+                <p className="text-xs font-bold uppercase tracking-wide text-primary">LAMROTH HAKOL</p>
+                <DialogTitle className="text-2xl font-bold uppercase">Guía de talles</DialogTitle>
+                <DialogDescription>Remera de Shabat · Todas las medidas están expresadas en centímetros.</DialogDescription>
+              </DialogHeader>
+              <div className="-mx-4 overflow-x-auto px-4">
+                <table className="w-full table-fixed overflow-hidden rounded-md border text-center text-[11px] sm:text-sm">
+                  <colgroup>
+                    <col className="w-[16%]" />
+                    <col className="w-[21%]" />
+                    <col className="w-[21%]" />
+                    <col className="w-[21%]" />
+                    <col className="w-[21%]" />
+                  </colgroup>
+                  <thead className="bg-primary text-primary-foreground">
+                    <tr>
+                      <th rowSpan={2} className="px-1 py-2 text-left sm:px-3">Talle</th>
+                      <th colSpan={2} className="px-1 py-2 sm:px-3">Medidas</th>
+                      <th colSpan={2} className="px-1 py-2 sm:px-3">Tolerancia (±)</th>
+                    </tr>
+                    <tr>
+                      <th className="px-1 pb-2 sm:px-3">Ancho</th>
+                      <th className="px-1 pb-2 sm:px-3">Alto</th>
+                      <th className="px-1 pb-2 sm:px-3">Ancho</th>
+                      <th className="px-1 pb-2 sm:px-3">Alto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {SHIRT_SIZE_GUIDE.map((measurement, index) => (
+                      <tr key={measurement.size} className={index % 2 === 0 ? "bg-muted/60" : "bg-background"}>
+                        <th scope="row" className="px-1 py-2.5 text-left font-semibold sm:px-3">{measurement.size}</th>
+                        <td className="px-1 py-2.5 sm:px-3">{measurement.width}</td>
+                        <td className="px-1 py-2.5 sm:px-3">{measurement.height}</td>
+                        <td className="px-1 py-2.5 sm:px-3">{measurement.widthTolerance}</td>
+                        <td className="px-1 py-2.5 sm:px-3">{measurement.heightTolerance}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+                <p>La tolerancia indica cuánto puede variar cada medida. Compará las medidas con una remera que te quede cómoda.</p>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+        <fieldset className={styles.sizes} aria-describedby={sizeError ? "size-error" : undefined}>
+          <legend className="sr-only">Elegí tu talle</legend>
+          <div>{SHIRT_SIZES.map((option) => <label key={option} className={size === option ? styles.selectedSize : ""}>
+            <input type="radio" name="shirt-size" value={option} checked={size === option} onChange={() => { setSize(option); setSizeError(false); }} /><span>{option}</span>
+          </label>)}</div>
+          {sizeError && <p id="size-error" role="alert" className={styles.error}>Elegí un talle para agregar la remera.</p>}
+        </fieldset>
+      </>}
       <div className={styles.productActions}>
         <Quantity value={quantity} onChange={setQuantity} label={`Cantidad de ${product.name}`} />
         <button className={styles.addButton} onClick={addProduct} disabled={!available}>{available ? "Agregar al pedido" : "Preventa cerrada"}<Plus size={18} /></button>
@@ -176,6 +234,14 @@ function Product({ id, index, available, onCart }: { id: ProductId; index: numbe
     </article>
   );
 }
+
+const SHIRT_SIZE_GUIDE = [
+  { size: "S", width: 50, height: 70, widthTolerance: "2,50", heightTolerance: "3,50" },
+  { size: "M", width: 53, height: 72, widthTolerance: "2,65", heightTolerance: "3,60" },
+  { size: "L", width: 56, height: 74, widthTolerance: "2,80", heightTolerance: "3,70" },
+  { size: "XL", width: 59, height: 76, widthTolerance: "2,95", heightTolerance: "3,80" },
+  { size: "2XL", width: 62, height: 78, widthTolerance: "3,10", heightTolerance: "3,90" },
+] as const;
 
 function Quantity({ value, onChange, label, disabled = false }: { value: number; onChange: (value: number) => void; label: string; disabled?: boolean }) {
   return <div className={styles.quantity} role="group" aria-label={label}>

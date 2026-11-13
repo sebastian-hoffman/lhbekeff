@@ -1,5 +1,5 @@
 export const PRESALE_CLOSES_AT = "2026-11-14T00:00:00-03:00";
-export const SHIRT_SIZES = ["6", "8", "10", "12", "14", "16", "S", "M", "L", "XL"] as const;
+export const SHIRT_SIZES = ["6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "2XL"] as const;
 
 export const PRODUCTS = [
   { id: "remera", name: "Remera de Shabat", priceCents: 1500000, requiresSize: true },
