@@ -20,7 +20,7 @@ const shopDisplay = Barlow_Condensed({ variable: "--font-shop-display", subsets:
 export const metadata: Metadata = {
   title: "Lamroth · Preventa Majané 2026",
   description:
-    "No te podés quedar sin la remera de Shabat. Remeras, botellitas y toallones Lamroth a precio especial de preventa hasta el 13 de noviembre. Entrega en sedes de Lamroth.",
+    "No te podés quedar sin la remera de Shabat. Remeras, botellitas y toallones Lamroth a precio especial de preventa abierta hasta nuevo aviso. Entrega en sedes de Lamroth.",
   icons: {
     icon: "/productos/lamroth-mark.png",
   },

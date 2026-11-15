@@ -1,4 +1,3 @@
-export const PRESALE_CLOSES_AT = "2026-11-14T00:00:00-03:00";
 export const SHIRT_SIZES = ["6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "2XL"] as const;
 
 export const PRODUCTS = [
@@ -10,8 +9,8 @@ export const PRODUCTS = [
 export type ProductId = (typeof PRODUCTS)[number]["id"];
 export type CartItem = { productId: ProductId; size: string; quantity: number };
 
-export function isPresaleOpen(now = new Date()) {
-  return now.getTime() < new Date(PRESALE_CLOSES_AT).getTime();
+export function isPresaleOpen() {
+  return true;
 }
 
 export function priceCart(items: CartItem[]) {

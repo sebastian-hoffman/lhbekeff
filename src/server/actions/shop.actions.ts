@@ -4,7 +4,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generatePurchaseCode } from "@/lib/purchase-code";
-import { isPresaleOpen, PRESALE_CLOSES_AT, priceCart } from "@/lib/shop";
+import { isPresaleOpen, priceCart } from "@/lib/shop";
 import { buyerSchema } from "@/lib/validations/purchase.schema";
 import type { CreatePurchaseResult } from "@/server/actions/purchase.actions";
 
@@ -20,7 +20,7 @@ const orderSchema = buyerSchema.extend({
 export async function createShopOrder(input: unknown): Promise<CreatePurchaseResult> {
   const parsed = orderSchema.safeParse(input);
   if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Revisá tu pedido." };
-  if (!isPresaleOpen()) return { success: false, error: "La preventa finalizó el 13 de noviembre." };
+  if (!isPresaleOpen()) return { success: false, error: "La preventa no está disponible en este momento." };
 
   let items;
   try {
@@ -35,7 +35,7 @@ export async function createShopOrder(input: unknown): Promise<CreatePurchaseRes
       update: {},
       create: {
         slug: "lamroth-preventa-2026", name: "Lamroth · Preventa Majané 2026",
-        date: new Date(PRESALE_CLOSES_AT), location: "Sedes de Lamroth",
+        date: new Date(), location: "Sedes de Lamroth",
         isActive: false, mercadoPagoLink: process.env.LAMROTH_MERCADO_PAGO_LINK ?? "",
         adultPriceCents: 0, minorPriceCents: 0, freePriceCents: 0,
         voluntaryAmountsCents: [],

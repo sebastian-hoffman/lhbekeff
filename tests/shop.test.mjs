@@ -27,7 +27,6 @@ test("invalid sizes, products, variants and quantities cannot be ordered", () =>
   assert.throws(() => priceCart([]));
 });
 
-test("presale closes after November 13 in Argentina", () => {
-  assert.equal(isPresaleOpen(new Date("2026-11-13T23:59:59-03:00")), true);
-  assert.equal(isPresaleOpen(new Date("2026-11-14T00:00:00-03:00")), false);
+test("presale remains open without a closing date", () => {
+  assert.equal(isPresaleOpen(), true);
 });

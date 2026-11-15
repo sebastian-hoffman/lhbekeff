@@ -33,8 +33,8 @@ export function Storefront({ open }: { open: boolean }) {
       <div className={styles.announcement}>
         <span className={styles.liveDot} />
         {available ? "PREVENTA ABIERTA" : "PREVENTA FINALIZADA"}
-        <span className={styles.announcementDetail}>PRECIOS ESPECIALES HASTA EL 13 DE NOVIEMBRE</span>
-        <span className={styles.mobileDeadline}>HASTA EL 13/11</span>
+        <span className={styles.announcementDetail}>PREVENTA ABIERTA · HASTA NUEVO AVISO</span>
+        <span className={styles.mobileDeadline}>PREVENTA ABIERTA</span>
         <ArrowRight size={14} aria-hidden="true" />
       </div>
       <header className={styles.header}>
@@ -79,7 +79,7 @@ export function Storefront({ open }: { open: boolean }) {
             <Image src={shirtImage} alt="Remera blanca de Shabat Lamroth: frente con logo y espalda con diseño de nombres formando las velas" priority sizes="100vw" />
           </div>
           <div className={styles.heroSticker} aria-label="Precio especial de preventa: 15.000 pesos">
-            <span>DONACIÓN PREVENTA</span><strong>$15.000</strong><span>HASTA EL 13/11</span>
+            <span>DONACIÓN PREVENTA</span><strong>$15.000</strong><span>ABIERTA</span>
           </div>
           <div className={styles.heroBottom}>
             <p>No te podés quedar sin<br /><strong>la remera de Shabat.</strong></p>
@@ -103,7 +103,7 @@ export function Storefront({ open }: { open: boolean }) {
         </section>
 
         <section id="preventa" className={styles.presale} aria-labelledby="presale-title">
-          <div className={styles.presaleHeadline}><p className={styles.eyebrow}>AHORA ES EL MOMENTO.</p><h2 id="presale-title">Precio especial.<br /><span>Por tiempo limitado.</span></h2><p>La preventa cierra el <strong>13 de noviembre de 2026.</strong><br />Tu próximo recuerdo de Lamroth empieza acá.</p><a href="#productos" className={styles.darkButton}>Elegir mis productos <ArrowRight size={18} /></a></div>
+          <div className={styles.presaleHeadline}><p className={styles.eyebrow}>AHORA ES EL MOMENTO.</p><h2 id="presale-title">Preventa abierta.<br /><span>Hasta nuevo aviso.</span></h2><p>La preventa está abierta nuevamente.<br />Tu próximo recuerdo de Lamroth empieza acá.</p><a href="#productos" className={styles.darkButton}>Elegir mis productos <ArrowRight size={18} /></a></div>
           <div className={styles.presaleFacts}>
             <div><span>01</span><div><h3>Elegí lo que va con vos.</h3><p>Remera, botellita o toallón. Podés combinar productos y talles en tu pedido.</p></div></div>
             <div><span>02</span><div><h3>Asegurá tu precio de preventa.</h3><p>Pagá con transferencia o Mercado Pago. Guardá el código de tu pedido.</p></div></div>
@@ -118,7 +118,7 @@ export function Storefront({ open }: { open: boolean }) {
             <details><summary>¿Puedo comprar varios productos y talles?</summary><p>Sí. Agregá cada talle al carrito por separado y elegí la cantidad que necesitás. Podés sumar botellitas y toallones al mismo pedido.</p></details>
             <details><summary>¿Se puede elegir el color de la botella?</summary><p>No se elige color. La imagen muestra los acabados del producto. La botella es de aluminio, tiene 600 ml de capacidad y colgante de silicona negra.</p></details>
             <details><summary>¿Cómo recibo mi pedido?</summary><p>La entrega se realiza en sedes de Lamroth. La fecha y la coordinación del retiro se informarán próximamente. No se ofrece envío a domicilio.</p></details>
-            <details><summary>¿Hasta cuándo puedo comprar en preventa?</summary><p>Hasta el 13 de noviembre de 2026 inclusive, hora de Argentina. Después del cierre no se aceptan nuevos pedidos a estos precios.</p></details>
+            <details><summary>¿Hasta cuándo puedo comprar en preventa?</summary><p>La preventa está abierta hasta nuevo aviso. La disponibilidad puede cambiar.</p></details>
           </div>
         </section>
       </main>
