@@ -333,7 +333,10 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
               aria-label="Filtrar compras por estado"
               className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:w-auto"
               value={statusFilter}
-              onChange={(event) => setStatusFilter(event.currentTarget.value as PurchaseListItem["status"] | "ALL")}
+              onChange={(event) => {
+                setStatusFilter(event.currentTarget.value as PurchaseListItem["status"] | "ALL");
+                table.setPageIndex(0);
+              }}
             >
               <option value="ALL">Todos los estados</option>
               <option value="PENDING">Pendientes</option>
