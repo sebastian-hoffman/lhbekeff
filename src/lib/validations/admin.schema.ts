@@ -13,10 +13,21 @@ export const rejectPurchaseSchema = z.object({
 });
 export type RejectPurchaseInput = z.infer<typeof rejectPurchaseSchema>;
 
+export const rejectPurchasesSchema = z.object({
+  purchaseIds: z.array(z.cuid()).min(1).max(100),
+  rejectionReason: z.string().trim().max(500).optional(),
+});
+export type RejectPurchasesInput = z.infer<typeof rejectPurchasesSchema>;
+
 export const confirmPurchaseSchema = z.object({
   purchaseId: z.cuid(),
 });
 export type ConfirmPurchaseInput = z.infer<typeof confirmPurchaseSchema>;
+
+export const confirmPurchasesSchema = z.object({
+  purchaseIds: z.array(z.cuid()).min(1).max(100),
+});
+export type ConfirmPurchasesInput = z.infer<typeof confirmPurchasesSchema>;
 
 export const deletePurchaseSchema = z.object({
   purchaseId: z.cuid(),
@@ -28,3 +39,9 @@ export const updatePurchaseGroupsSchema = z.object({
   groups: z.array(z.enum(BUYER_GROUPS)).max(BUYER_GROUPS.length),
 });
 export type UpdatePurchaseGroupsInput = z.infer<typeof updatePurchaseGroupsSchema>;
+
+export const updateProductDeliveryStatusSchema = z.object({
+  purchaseIds: z.array(z.cuid()).min(1).max(500),
+  delivered: z.boolean(),
+});
+export type UpdateProductDeliveryStatusInput = z.infer<typeof updateProductDeliveryStatusSchema>;

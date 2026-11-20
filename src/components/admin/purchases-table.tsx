@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   type ColumnDef,
+  type RowSelectionState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -55,8 +56,10 @@ import { Money } from "@/components/shared/money";
 import { StatusBadge } from "@/components/shared/status-badge";
 import {
   confirmPurchase,
+  confirmPurchases,
   deletePurchase,
   rejectPurchase,
+  rejectPurchases,
 } from "@/server/actions/admin-purchase.actions";
 import type { PurchaseListItem } from "@/server/services/purchase.service";
 
@@ -73,6 +76,7 @@ const STATUS_LABELS: Record<PurchaseListItem["status"], string> = {
   CONFIRMED: "Confirmada",
   REJECTED: "Rechazada",
 };
+const MAX_BULK_PURCHASES = 100;
 
 function csvCell(value: string) {
   const safeValue = /^[\t\r ]*[=+\-@]/.test(value) ? `'${value}` : value;
@@ -87,12 +91,36 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
   const router = useRouter();
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<PurchaseListItem["status"] | "ALL">("ALL");
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [copiedReceiptId, setCopiedReceiptId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<PurchaseListItem | null>(null);
+  const [bulkRejectIds, setBulkRejectIds] = useState<string[] | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<PurchaseListItem | null>(null);
   const [isPending, startTransition] = useTransition();
+  const selectedPurchaseIds = Object.keys(rowSelection).filter((id) => rowSelection[id]);
+  const selectedPurchases = data.filter((purchase) => selectedPurchaseIds.includes(purchase.id));
+
+  function handleConfirmSelected() {
+    setActionError(null);
+    startTransition(async () => {
+      const result = await confirmPurchases({ purchaseIds: selectedPurchaseIds });
+      if (!result.success) {
+        setActionError(result.error);
+        return;
+      }
+      setRowSelection({});
+      router.refresh();
+    });
+  }
+
+  function handleRejectSelected() {
+    setActionError(null);
+    setRejectTarget(null);
+    setRejectionReason("");
+    setBulkRejectIds(selectedPurchaseIds);
+  }
 
   function handleConfirm(purchase: PurchaseListItem) {
     setActionError(null);
@@ -102,23 +130,25 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
         setActionError(result.error);
         return;
       }
+      setRowSelection({});
       router.refresh();
     });
   }
 
   function handleRejectSubmit() {
-    if (!rejectTarget) return;
+    if (!rejectTarget && !bulkRejectIds) return;
     setActionError(null);
     startTransition(async () => {
-      const result = await rejectPurchase({
-        purchaseId: rejectTarget.id,
-        rejectionReason,
-      });
+      const result = bulkRejectIds
+        ? await rejectPurchases({ purchaseIds: bulkRejectIds, rejectionReason })
+        : await rejectPurchase({ purchaseId: rejectTarget!.id, rejectionReason });
       if (!result.success) {
         setActionError(result.error);
         return;
       }
       setRejectTarget(null);
+      setBulkRejectIds(null);
+      setRowSelection({});
       setRejectionReason("");
       router.refresh();
     });
@@ -151,6 +181,31 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
   }
 
   const columns: ColumnDef<PurchaseListItem>[] = [
+    {
+      id: "select",
+      enableSorting: false,
+      enableGlobalFilter: false,
+      header: ({ table }) => (
+        <input
+          type="checkbox"
+          className="size-4 accent-primary"
+          aria-label="Seleccionar compras de esta página, hasta 100 en total"
+          checked={table.getIsAllPageRowsSelected()}
+          disabled={!table.getIsAllPageRowsSelected() && selectedPurchaseIds.length + table.getRowModel().rows.filter((row) => !row.getIsSelected()).length > MAX_BULK_PURCHASES}
+          onChange={(event) => table.toggleAllPageRowsSelected(event.currentTarget.checked)}
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          className="size-4 accent-primary"
+          aria-label={`Seleccionar compra ${row.original.code}`}
+          checked={row.getIsSelected()}
+          disabled={!row.getIsSelected() && selectedPurchaseIds.length >= MAX_BULK_PURCHASES}
+          onChange={row.getToggleSelectedHandler()}
+        />
+      ),
+    },
     {
       accessorKey: "createdAt",
       header: "Fecha",
@@ -274,8 +329,10 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
   const table = useReactTable({
     data: filteredData,
     columns,
-    state: { globalFilter },
+    state: { globalFilter, rowSelection },
     onGlobalFilterChange: setGlobalFilter,
+    onRowSelectionChange: setRowSelection,
+    getRowId: (purchase) => purchase.id,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -323,7 +380,10 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
             <Input
               placeholder="Buscar por nombre, email o código…"
               value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
+              onChange={(e) => {
+                setGlobalFilter(e.target.value);
+                setRowSelection({});
+              }}
               className="pl-9"
             />
           </div>
@@ -335,6 +395,7 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
               value={statusFilter}
               onChange={(event) => {
                 setStatusFilter(event.currentTarget.value as PurchaseListItem["status"] | "ALL");
+                setRowSelection({});
                 table.setPageIndex(0);
               }}
             >
@@ -345,10 +406,37 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
             </select>
           </label>
         </div>
-        <Button type="button" variant="outline" onClick={downloadCsv} disabled={table.getFilteredRowModel().rows.length === 0}>
-          <Download className="size-4" />
-          Descargar CSV
-        </Button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {selectedPurchases.length > 0 ? (
+            <>
+              <span className="text-sm text-muted-foreground" aria-live="polite">
+                {selectedPurchases.length} / {MAX_BULK_PURCHASES} seleccionadas
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleConfirmSelected}
+                disabled={isPending || selectedPurchases.every((purchase) => purchase.status === "CONFIRMED")}
+              >
+                <CheckCircle2 className="size-4" />
+                Confirmar pago
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleRejectSelected}
+                disabled={isPending || selectedPurchases.every((purchase) => purchase.status === "REJECTED")}
+              >
+                <XCircle className="size-4" />
+                Rechazar
+              </Button>
+            </>
+          ) : null}
+          <Button type="button" variant="outline" onClick={downloadCsv} disabled={table.getFilteredRowModel().rows.length === 0}>
+            <Download className="size-4" />
+            Descargar CSV
+          </Button>
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">
         Los links compartibles de comprobantes vencen a los 7 días y dan acceso únicamente a ese archivo.
@@ -423,19 +511,22 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
       </div>
 
       <Dialog
-        open={!!rejectTarget}
+        open={!!rejectTarget || bulkRejectIds !== null}
         onOpenChange={(open) => {
           if (!open) {
             setRejectTarget(null);
+            setBulkRejectIds(null);
             setRejectionReason("");
           }
         }}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rechazar compra</DialogTitle>
+            <DialogTitle>{bulkRejectIds ? "Rechazar compras" : "Rechazar compra"}</DialogTitle>
             <DialogDescription>
-              {rejectTarget ? (
+              {bulkRejectIds ? (
+                <>{bulkRejectIds.length} compras seleccionadas. Podés indicar un motivo común (opcional).</>
+              ) : rejectTarget ? (
                 <>
                   {rejectTarget.code} · {rejectTarget.buyerName}. Opcionalmente, indicá el motivo.
                 </>
@@ -452,7 +543,7 @@ export function PurchasesTable({ data }: { data: PurchaseListItem[] }) {
               <Button variant="outline">Cancelar</Button>
             </DialogClose>
             <Button variant="destructive" onClick={handleRejectSubmit} disabled={isPending}>
-              {isPending ? "Rechazando…" : "Rechazar compra"}
+              {isPending ? "Rechazando…" : bulkRejectIds ? "Rechazar compras" : "Rechazar compra"}
             </Button>
           </DialogFooter>
         </DialogContent>

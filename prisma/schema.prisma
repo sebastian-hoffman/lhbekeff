@@ -24,6 +24,11 @@ enum PurchaseStatus {
   REJECTED
 }
 
+enum ProductDeliveryStatus {
+  PENDING
+  DELIVERED
+}
+
 /// Un evento (ej. "Bingo Bekeff 2026"). Reutilizable año a año: para un nuevo
 /// evento se crea un nuevo registro con sus propios precios, fechas y link de
 /// pago, sin tocar código.
@@ -92,6 +97,7 @@ model Purchase {
   mercadoPagoCheckoutUrl   String?
 
   status PurchaseStatus @default(PENDING)
+  deliveryStatus ProductDeliveryStatus @default(PENDING)
 
   receiptUrl      String?
   receiptMimeType String?

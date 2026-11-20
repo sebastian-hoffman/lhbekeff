@@ -1,19 +1,25 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { PurchaseStatus } from "@/generated/prisma/client";
+import { ProductDeliveryStatus, PurchaseStatus } from "@/generated/prisma/client";
 import { getAdminSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { deleteReceipt } from "@/lib/storage";
 import { formatTicketNumber } from "@/lib/ticket-number";
 import {
   confirmPurchaseSchema,
+  confirmPurchasesSchema,
   deletePurchaseSchema,
   rejectPurchaseSchema,
+  rejectPurchasesSchema,
+  updateProductDeliveryStatusSchema,
   updatePurchaseGroupsSchema,
   type ConfirmPurchaseInput,
+  type ConfirmPurchasesInput,
   type DeletePurchaseInput,
   type RejectPurchaseInput,
+  type RejectPurchasesInput,
+  type UpdateProductDeliveryStatusInput,
   type UpdatePurchaseGroupsInput,
 } from "@/lib/validations/admin.schema";
 
@@ -24,6 +30,7 @@ function revalidatePurchaseViews(purchaseId: string) {
   revalidatePath("/admin/compras");
   revalidatePath(`/admin/compras/${purchaseId}`);
   revalidatePath("/admin/ingreso");
+  revalidatePath("/admin/entregas");
 }
 
 /**
@@ -41,16 +48,24 @@ export async function confirmPurchase(input: ConfirmPurchaseInput): Promise<Admi
   const { purchaseId } = parsed.data;
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await confirmPurchasesAtomically([purchaseId], session.email);
+  } catch {
+    return { success: false, error: "No se pudo confirmar la compra." };
+  }
+
+  revalidatePurchaseViews(purchaseId);
+  return { success: true };
+}
+
+async function confirmPurchasesAtomically(purchaseIds: string[], confirmedBy: string) {
+  await prisma.$transaction(async (tx) => {
+    for (const purchaseId of purchaseIds) {
       const purchase = await tx.purchase.findUniqueOrThrow({
         where: { id: purchaseId },
         include: { tickets: true },
       });
+      if (purchase.status === PurchaseStatus.CONFIRMED) continue;
 
-      // Solo se numeran las entradas que todavía no tienen número. Esto hace
-      // que confirmar sea idempotente incluso si la compra pasó antes por
-      // CONFIRMED -> REJECTED -> CONFIRMED: no se vuelve a numerar (lo que
-      // desperdiciaría números) ni se pisa el número ya asignado.
       for (const ticket of purchase.tickets) {
         if (ticket.number) continue;
         const sequence = await tx.ticketSequence.update({
@@ -68,17 +83,35 @@ export async function confirmPurchase(input: ConfirmPurchaseInput): Promise<Admi
         data: {
           status: PurchaseStatus.CONFIRMED,
           confirmedAt: new Date(),
-          confirmedBy: session.email,
+          confirmedBy,
           rejectedAt: null,
           rejectionReason: null,
         },
       });
-    });
+    }
+  }, { timeout: 30_000 });
+}
+
+export async function confirmPurchases(input: ConfirmPurchasesInput): Promise<AdminActionResult> {
+  const session = await getAdminSession();
+  if (!session) return { success: false, error: "No autorizado." };
+
+  const parsed = confirmPurchasesSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Seleccioná hasta 100 compras válidas." };
+
+  try {
+    await confirmPurchasesAtomically(parsed.data.purchaseIds, session.email);
   } catch {
-    return { success: false, error: "No se pudo confirmar la compra." };
+    return { success: false, error: "No se pudieron confirmar las compras seleccionadas." };
   }
 
-  revalidatePurchaseViews(purchaseId);
+  revalidatePath("/admin");
+  revalidatePath("/admin/compras");
+  revalidatePath("/admin/ingreso");
+  revalidatePath("/admin/entregas");
+  for (const purchaseId of parsed.data.purchaseIds) {
+    revalidatePath(`/admin/compras/${purchaseId}`);
+  }
   return { success: true };
 }
 
@@ -137,6 +170,41 @@ export async function rejectPurchase(input: RejectPurchaseInput): Promise<AdminA
   return { success: true };
 }
 
+export async function rejectPurchases(input: RejectPurchasesInput): Promise<AdminActionResult> {
+  const session = await getAdminSession();
+  if (!session) return { success: false, error: "No autorizado." };
+
+  const parsed = rejectPurchasesSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Seleccioná hasta 100 compras válidas." };
+
+  try {
+    const result = await prisma.purchase.updateMany({
+      where: {
+        id: { in: parsed.data.purchaseIds },
+        status: { not: PurchaseStatus.REJECTED },
+      },
+      data: {
+        status: PurchaseStatus.REJECTED,
+        rejectedAt: new Date(),
+        rejectionReason: parsed.data.rejectionReason || null,
+      },
+    });
+    if (result.count === 0) {
+      return { success: false, error: "No encontramos las compras seleccionadas." };
+    }
+  } catch {
+    return { success: false, error: "No se pudieron rechazar las compras seleccionadas." };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/compras");
+  revalidatePath("/admin/entregas");
+  for (const purchaseId of parsed.data.purchaseIds) {
+    revalidatePath(`/admin/compras/${purchaseId}`);
+  }
+  return { success: true };
+}
+
 export async function updatePurchaseGroups(
   input: UpdatePurchaseGroupsInput,
 ): Promise<AdminActionResult> {
@@ -156,5 +224,40 @@ export async function updatePurchaseGroups(
   }
 
   revalidatePurchaseViews(parsed.data.purchaseId);
+  return { success: true };
+}
+
+export async function updateProductDeliveryStatuses(
+  input: UpdateProductDeliveryStatusInput,
+): Promise<AdminActionResult> {
+  const session = await getAdminSession();
+  if (!session) return { success: false, error: "No autorizado." };
+
+  const parsed = updateProductDeliveryStatusSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Datos inválidos." };
+
+  try {
+    const result = await prisma.purchase.updateMany({
+      where: {
+        id: { in: parsed.data.purchaseIds },
+        status: { in: [PurchaseStatus.PENDING, PurchaseStatus.CONFIRMED] },
+        items: { some: {} },
+      },
+      data: {
+        deliveryStatus: parsed.data.delivered
+          ? ProductDeliveryStatus.DELIVERED
+          : ProductDeliveryStatus.PENDING,
+      },
+    });
+    if (result.count === 0) {
+      return { success: false, error: "No encontramos pedidos de productos entregables." };
+    }
+  } catch {
+    return { success: false, error: "No se pudieron actualizar los estados de entrega." };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/compras");
+  revalidatePath("/admin/entregas");
   return { success: true };
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, ListChecks, LogOut, Receipt } from "lucide-react";
+import { LayoutDashboard, ListChecks, LogOut, PackageCheck, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { getAdminSession } from "@/lib/auth/session";
@@ -9,6 +9,7 @@ import { adminLogout } from "@/server/actions/admin-auth.actions";
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/compras", label: "Compras", icon: Receipt },
+  { href: "/admin/entregas", label: "Entregas", icon: PackageCheck },
   { href: "/admin/ingreso", label: "Ingreso", icon: ListChecks },
 ];
 

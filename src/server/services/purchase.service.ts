@@ -1,5 +1,6 @@
 import "server-only";
 
+import { PurchaseStatus } from "@/generated/prisma/client";
 import { createReceiptShareToken } from "@/lib/receipt-share";
 import { prisma } from "@/lib/prisma";
 
@@ -29,6 +30,31 @@ export async function listPurchases() {
 }
 
 export type PurchaseListItem = Awaited<ReturnType<typeof listPurchases>>[number];
+
+export function listDeliveryOrders() {
+  return prisma.purchase.findMany({
+    where: {
+      status: { in: [PurchaseStatus.PENDING, PurchaseStatus.CONFIRMED] },
+      items: { some: {} },
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      code: true,
+      buyerName: true,
+      buyerEmail: true,
+      buyerPhone: true,
+      status: true,
+      deliveryStatus: true,
+      createdAt: true,
+      items: {
+        select: { id: true, name: true, size: true, quantity: true },
+      },
+    },
+  });
+}
+
+export type DeliveryOrder = Awaited<ReturnType<typeof listDeliveryOrders>>[number];
 
 export function getPurchaseById(id: string) {
   return prisma.purchase.findUnique({
