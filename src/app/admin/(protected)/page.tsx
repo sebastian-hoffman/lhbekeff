@@ -22,6 +22,15 @@ export default async function AdminDashboardPage() {
     getProductOrderStatusSummary(),
     getDailySalesSummary(),
   ]);
+  const shirtTotals = productsBySize
+    .filter((product) => product.productId === "remera")
+    .reduce(
+      (totals, product) => ({
+        pending: totals.pending + product.pending,
+        confirmed: totals.confirmed + product.confirmed,
+      }),
+      { pending: 0, confirmed: 0 },
+    );
 
   return (
     <div className="space-y-6">
@@ -87,7 +96,43 @@ export default async function AdminDashboardPage() {
       <section className="border-t pt-6">
         <h2 className="text-lg font-semibold">Preventa · Productos por talle</h2>
         <p className="mt-1 text-sm text-muted-foreground">Cantidades para preparar la producción. Los pedidos rechazados no se incluyen.</p>
-        {productsBySize.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">Todavía no hay pedidos de productos.</p> : <div className="mt-4 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="py-3">Producto</th><th>Talle</th><th className="text-right">Pendientes</th><th className="text-right">Pagados</th><th className="text-right">Total</th></tr></thead><tbody>{productsBySize.map((product) => <tr key={`${product.productId}-${product.size}`} className="border-b"><td className="py-3 pr-4">{product.name}</td><td>{product.size ?? "—"}</td><td className="text-right">{product.pending}</td><td className="text-right font-semibold">{product.confirmed}</td><td className="text-right font-semibold">{product.pending + product.confirmed}</td></tr>)}</tbody></table></div>}
+        {productsBySize.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">Todavía no hay pedidos de productos.</p> : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full table-fixed text-left text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="w-[40%] py-3">Producto</th>
+                  <th className="w-[12%]">Talle</th>
+                  <th className="w-[16%] text-right">Total</th>
+                  <th className="w-[16%] text-right">Pagados</th>
+                  <th className="w-[16%] text-right">Pendientes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {productsBySize.map((product) => (
+                  <tr key={`${product.productId}-${product.size}`} className="border-b">
+                    <td className="py-3 pr-4">{product.name}</td>
+                    <td>{product.size ?? "—"}</td>
+                    <td className="text-right font-semibold tabular-nums">{product.pending + product.confirmed}</td>
+                    <td className="text-right tabular-nums">{product.confirmed}</td>
+                    <td className="text-right tabular-nums">{product.pending}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {shirtTotals.pending + shirtTotals.confirmed > 0 ? (
+                <tfoot>
+                  <tr className="border-t-2 font-semibold">
+                    <td className="py-3 pr-4">Total remeras</td>
+                    <td>Todos</td>
+                    <td className="text-right tabular-nums">{shirtTotals.pending + shirtTotals.confirmed}</td>
+                    <td className="text-right tabular-nums">{shirtTotals.confirmed}</td>
+                    <td className="text-right tabular-nums">{shirtTotals.pending}</td>
+                  </tr>
+                </tfoot>
+              ) : null}
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );
